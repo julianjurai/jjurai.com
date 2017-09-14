@@ -1976,15 +1976,15 @@
 		footer.major {
 			/*border-bottom-width: 1px;*/
 			/*border-color: rgba(224, 224, 224, 0.55);*/
-			border-style: solid;
-			border-top-width: 1px;
+			/*border-style: solid;
+			border-top-width: 1px;*/
 			margin-top: 6em;
 			padding: 4em 0;
 			position: relative;
 		}
 
 			footer.major:before, footer.major:after {
-				background:  ;
+				/*background:  ;*/
 				content: '';
 				display: block;
 				height: 1px;
@@ -2951,6 +2951,7 @@
 			}
 
 			header.major {
+        padding: 1em;
 				/*margin-bottom: 2em;*/
 			}
 
@@ -2960,7 +2961,7 @@
 
 				header.major p {
 					font-size: 0.8em;
-          padding: 0 1em 0 1em;;
+          padding: 1em;;
           margin: 0;
           text-align: justify;
 				}
@@ -3014,7 +3015,7 @@
 				}
 
 				.feature .content {
-					border: solid 1px rgba(224, 224, 224, 0.55);;
+					/*border: solid 1px rgba(224, 224, 224, 0.55);;*/
 					padding: 2em !important;
 					text-align: center;
 					width: 100%;
@@ -3210,10 +3211,7 @@ footer.major.container {
 
 
 
-#main > header:nth-child(2){
-  /*border-bottom: 1px solid blue;*/
-    /*margin-bottom: 50px*/
-}
+
 
 #main > header:nth-child(3) {
   display: flex;
@@ -3236,10 +3234,13 @@ footer.major.container {
 }
 
 body > footer > h3 {
+  border-top: 1px solid #5B5B5B;
   border-bottom: 1px solid #5B5B5B;
 }
 
 #about-me {
+  /*border-top: 1px solid #5B5B5B;
+  border-bottom: 1px solid #5B5B5B;*/
   letter-spacing: 1.04px;
   text-align: justify;
   font-size: 0.8em;
