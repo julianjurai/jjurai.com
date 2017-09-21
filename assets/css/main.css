@@ -2521,7 +2521,7 @@
 		background-size: 3200px 460px,					auto,					cover;
 		color: rgba(255, 255, 255, 0.8);
 		/*padding: 10em 0 20em 0;*/
-    padding: 3em 0 8em 0;
+    padding: 3em 0 7em 0;
 		position: relative;
 		text-align: center;
 	}
@@ -2585,11 +2585,11 @@
 			cursor: default;
 			display: inline-block;
 			font-size: 2.25em;
-			height: 2.35em;
-			line-height: 2.35em;
-			margin: 0 0 0.75em 0;
+			height: 3em;
+			/*line-height: 2em;*/
+			/*margin: 0 0 0.75em 0;*/
 			text-align: center;
-			width: 2.35em;
+			width: 3em;
 		}
 
 			#header .logo.fa-paper-plane-o:before {
@@ -3255,5 +3255,5 @@ body > footer > h3 {
 }
 
 #header {
-  padding: 2em 0 4em 0;
+  padding: 2em 0 7em 0;
 }

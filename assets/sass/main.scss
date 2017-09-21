@@ -784,11 +784,12 @@
 			cursor: default;
 			display: inline-block;
 			font-size: 2.25em;
-			height: 2.35em;
+			height: 3em;
+      width: 3em;
 			line-height: 2.35em;
-			margin: 0 0 0.75em 0;
+
 			text-align: center;
-			width: 2.35em;
+
 
 			&.fa-paper-plane-o:before {
 				left: -0.075em;
@@ -807,6 +808,7 @@
 			margin: 0.25em 0 0 0;
 		}
 	}
+
 
 /* Footer */
 
@@ -1239,6 +1241,8 @@
 
 				.logo {
 					font-size: 1.5em;
+          height: 3em;
+          width: 3em;
 				}
 
 				h1 {
@@ -1378,3 +1382,7 @@
 			}
 
 	}
+
+  #header > span > img {
+    margin: 0 !important;
+  }
