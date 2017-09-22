@@ -2587,7 +2587,7 @@
 			font-size: 2.25em;
 			height: 3em;
 			/*line-height: 2em;*/
-	
+
 			text-align: center;
 			width: 3em;
 		}
@@ -3256,4 +3256,16 @@ body > footer > h3 {
 
 #header {
   padding: 2em 0 7em 0;
+}
+
+#resume-button {
+  border: 1px solid #242424 !important;
+  border-radius: 3px !important;
+  color: white !important;
+  padding: 0.5em 2em !important;
+  background: #242424 !important;
+}
+
+#resume-button:hover {
+  opacity: 0.8
 }
