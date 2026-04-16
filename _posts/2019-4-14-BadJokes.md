@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Bad Jokes
+tags: [coding]
 ---
 
 There isn't any useful content here yet so I'm just going to fill this space with jokes. Until development is complete... becuase why not.

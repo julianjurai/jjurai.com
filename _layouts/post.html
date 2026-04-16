@@ -8,12 +8,36 @@ layout: default
       <a href="{{ site.baseurl }}{{ page.url }}">{{ page.title }}</a>
     </h1>
     <div class="date">{{ page.date | date: "%B %e, %Y" }}</div>
+
+    {% if page.tags %}
+      <div class="post-tags">
+        {% for tag in page.tags %}
+          <span class="post-tag tag-{{ tag }}">{{ tag }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
   </div>
+
   <div class="entry">
     {{ content }}
   </div>
 
-  <div class="date">Written on {{ page.date | date: "%B %e, %Y" }}</div>
+  <div class="post-footer">
+    <div class="date">Written on {{ page.date | date: "%B %e, %Y" }}</div>
+
+    {% if page.tags %}
+      <div class="post-tags">
+        <strong>Topics:</strong>
+        {% for tag in page.tags %}
+          <span class="post-tag tag-{{ tag }}">{{ tag }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="back-to-blog">
+      <a href="{{ site.baseurl }}/blog/">← Back to Knowledge Graph</a>
+    </div>
+  </div>
 
   {% include disqus.html %}
 </article>
