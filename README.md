@@ -1,120 +1,232 @@
-> March, 2016: If you're on an old version of Jekyll Now and run into a) build warnings or b) syntax highlighting issues caused by [Jekyll 3 and GitHub Pages updates](https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0), just :sparkles:[update your _config.yml](https://github.com/barryclark/jekyll-now/pull/445/files):sparkles: and you'll be set!
+# Julian Jurai - Personal Website
 
-# Jekyll Now
+A modern personal website showcasing my work as a Senior Software Engineer, technical blog posts, and professional experience.
 
-**Jekyll** is a static site generator that's perfect for GitHub hosted blogs ([Jekyll Repository](https://github.com/jekyll/jekyll))
+## About
 
-**Jekyll Now** makes it easier to create your Jekyll blog, by eliminating a lot of the up front setup.
+This is my personal website built with Jekyll. It features:
 
-- You don't need to touch the command line
-- You don't need to install/configure ruby, rvm/rbenv, ruby gems :relaxed:
-- You don't need to install runtime dependencies like markdown processors, Pygments, etc
-- If you're on Windows, this will make setting up Jekyll a lot easier
-- It's easy to try out, you can just delete your forked repository if you don't like it
+- **Professional Profile**: Updated information about my work at Breezeway, technical skills, and background
+- **Knowledge Graph Blog**: A chronological blog system where posts are tagged for easy navigation across various topics and domains
+- **Resume**: Direct link to downloadable PDF resume
+- **Projects**: Links to GitHub projects and professional portfolio
 
-In a few minutes you'll be set up with a minimal, responsive blog like the one below giving you more time to spend on writing epic blog posts!
+## Technical Stack
 
-![Jekyll Now Theme Screenshot](/images/jekyll-now-theme-screenshot.jpg "Jekyll Now Theme Screenshot")
+- **Static Site Generator**: Jekyll
+- **Hosting**: GitHub Pages
+- **Styling**: SCSS with clean, retro design
+- **Features**:
+  - Chronological blog with tags
+  - Automatic dark mode support
+  - Responsive design
+  - Optimized for readability and accessibility
+
+## Blog Structure
+
+The blog is designed as an interconnected knowledge graph where posts are tagged by topic, allowing readers to explore related content. Posts are displayed chronologically with tags and dates for easy navigation.
 
 ## Quick Start
 
-### Step 1) Fork Jekyll Now to your User Repository
+### Prerequisites
 
-Fork this repo, then rename the repository to yourgithubusername.github.io.
+- macOS with [Homebrew](https://brew.sh/) installed
+- Git
 
-Your Jekyll blog will often be viewable immediately at <https://yourgithubusername.github.io> (if it's not, you can often force it to build by completing step 2)
+### Automated Setup (Recommended)
 
-![Step 1](/images/step1.gif "Step 1")
+1. Clone the repository:
+```bash
+git clone https://github.com/Julian-Jurai/jjurai.com.git
+cd jjurai.com
+```
 
-### Step 2) Customize and view your site
+2. Run the setup script (installs Ruby and Jekyll):
+```bash
+./setup.sh
+```
 
-Enter your site name, description, avatar and many other options by editing the _config.yml file. You can easily turn on Google Analytics tracking, Disqus commenting and social icons here too.
+3. Start the development server:
+```bash
+./start.sh
+```
 
-Making a change to _config.yml (or any file in your repository) will force GitHub Pages to rebuild your site with jekyll. Your rebuilt site will be viewable a few seconds later at <https://yourgithubusername.github.io> - if not, give it ten minutes as GitHub suggests and it'll appear soon
+4. Open your browser to `http://127.0.0.1:4000/`
 
-> There are 3 different ways that you can make changes to your blog's files:
+The setup script will:
+- Check for Homebrew
+- Install Ruby 4.0+ if needed (system Ruby is too old)
+- Add Ruby to your PATH in `.zshrc` or `.bash_profile`
+- Install Jekyll and Bundler
+- Set up all dependencies
 
-> 1. Edit files within your new username.github.io repository in the browser at GitHub.com (shown below).
-> 2. Use a third party GitHub content editor, like [Prose by Development Seed](http://prose.io). It's optimized for use with Jekyll making markdown editing, writing drafts, and uploading images really easy.
-> 3. Clone down your repository and make updates locally, then push them to your GitHub repository.
+### Manual Setup
 
-![_config.yml](/images/config.png "_config.yml")
+If you prefer to set up manually or are not on macOS:
 
-### Step 3) Publish your first blog post
+1. **Install Ruby 2.7 or higher**
+   - On macOS with Homebrew: `brew install ruby`
+   - On Linux: Use your package manager or [rbenv](https://github.com/rbenv/rbenv)
+   - On Windows: Use [RubyInstaller](https://rubyinstaller.org/)
 
-Edit `/_posts/2014-3-3-Hello-World.md` to publish your first blog post. This [Markdown Cheatsheet](http://www.jekyllnow.com/Markdown-Style-Guide/) might come in handy.
+2. **Add Ruby to PATH** (macOS with Homebrew Ruby):
+   ```bash
+   echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
+   echo 'export PATH="/opt/homebrew/lib/ruby/gems/4.0.0/bin:$PATH"' >> ~/.zshrc
+   source ~/.zshrc
+   ```
 
-![First Post](/images/first-post.png "First Post")
+3. **Install Jekyll and Bundler**:
+   ```bash
+   gem install jekyll bundler
+   ```
 
-> You can add additional posts in the browser on GitHub.com too! Just hit the + icon in `/_posts/` to create new content. Just make sure to include the [front-matter](http://jekyllrb.com/docs/frontmatter/) block at the top of each new blog post and make sure the post's filename is in this format: year-month-day-title.md
+4. **Start the development server**:
+   ```bash
+   jekyll serve
+   ```
 
-## Local Development
+5. Visit `http://127.0.0.1:4000/`
 
-1. Install Jekyll and plug-ins in one fell swoop. `gem install github-pages` This mirrors the plug-ins used by GitHub Pages on your local machine including Jekyll, Sass, etc.
-2. Clone down your fork `git clone https://github.com/yourusername/yourusername.github.io.git`
-3. Serve the site and watch for markup/sass changes `jekyll serve`
-4. View your website at http://127.0.0.1:4000/
-5. Commit any changes and push everything to the master branch of your GitHub user repository. GitHub Pages will then rebuild and serve your website.
+### Development Scripts
 
-## Moar!
+**`./setup.sh`** - One-time setup
+- Checks for Homebrew
+- Installs Ruby 4.0+ if needed
+- Installs Jekyll and Bundler
+- Configures PATH in shell profile
 
-I've created a more detailed walkthrough, [**Build A Blog With Jekyll And GitHub Pages**](http://www.smashingmagazine.com/2014/08/01/build-blog-jekyll-github-pages/) over at the Smashing Magazine website. Check it out if you'd like a more detailed walkthrough and some background on Jekyll. :metal:
+**`./start.sh`** - Start development server
+- Sets up Ruby environment
+- Starts Jekyll with live reload
+- Available at http://127.0.0.1:4000/
 
-It covers:
+### Development Commands
 
-- A more detailed walkthrough of setting up your Jekyll blog
-- Common issues that you might encounter while using Jekyll
-- Importing from Wordpress, using your own domain name, and blogging in your favorite editor
-- Theming in Jekyll, with Liquid templating examples
-- A quick look at Jekyll 2.0’s new features, including Sass/Coffeescript support and Collections
+```bash
+# Start server with live reload (recommended)
+./start.sh
 
-## Jekyll Now Features
+# Or manually
+jekyll serve --livereload
 
-✓ Command-line free _fork-first workflow_, using GitHub.com to create, customize and post to your blog
-✓ Fully responsive and mobile optimized base theme (**[Theme Demo](http://jekyllnow.com)**)
-✓ Sass/Coffeescript support using Jekyll 2.0
-✓ Free hosting on your GitHub Pages user site
-✓ Markdown blogging
-✓ Syntax highlighting
-✓ Disqus commenting
-✓ Google Analytics integration
-✓ SVG social icons for your footer
-✓ 3 http requests, including your avatar
+# Build site without serving
+jekyll build
 
-✘ No installing dependencies
-✘ No need to set up local development
-✘ No configuring plugins
-✘ No need to spend time on theming
-✘ More time to code other things ... wait ✓!
+# Clean generated files
+jekyll clean
+```
 
-## Questions?
+## Creating New Blog Posts
 
-[Open an Issue](https://github.com/barryclark/jekyll-now/issues/new) and let's chat!
+Create a new markdown file in the `_posts` directory with the format:
+```
+YYYY-MM-DD-Title-Of-Post.md
+```
 
-## Other forkable themes
+Include front matter with tags:
+```yaml
+---
+layout: post
+title: Your Post Title
+tags: [coding, finance, history]
+---
 
-You can use the [Quick Start](https://github.com/barryclark/jekyll-now#quick-start) workflow with other themes that are set up to be forked too! Here are some of my favorites:
+Your content here...
+```
 
-- [Hyde](https://github.com/poole/hyde) by MDO
-- [Lanyon](https://github.com/poole/lanyon) by MDO
-- [mojombo.github.io](https://github.com/mojombo/mojombo.github.io) by Tom Preston-Werner
-- [Left](https://github.com/holman/left) by Zach Holman
-- [Minimal Mistakes](https://github.com/mmistakes/minimal-mistakes) by Michael Rose
-- [Skinny Bones](https://github.com/mmistakes/skinny-bones-jekyll) by Michael Rose
+## Project Structure
 
-## Credits
+```
+├── _includes/          # Reusable components (header, footer, etc.)
+├── _layouts/           # Page templates (default, page, post)
+├── _posts/             # Blog posts in Markdown
+├── _sass/              # Sass partials (_variables, _reset, etc.)
+├── assets/images/      # Images and static assets
+├── style.scss          # Main stylesheet
+├── index.html          # Homepage with about section
+├── blog.html           # Blog listing page with tag filtering
+├── setup.sh            # Automated setup script
+├── start.sh            # Start development server script
+├── _config.yml         # Jekyll configuration
+└── README.md           # This file
+```
 
-- [Jekyll](https://github.com/jekyll/jekyll) - Thanks to its creators, contributors and maintainers.
-- [SVG icons](https://github.com/neilorangepeel/Free-Social-Icons) - Thanks, Neil Orange Peel. They're beautiful.
-- [Solarized Light Pygments](https://gist.github.com/edwardhotchkiss/2005058) - Thanks, Edward.
-- [Joel Glovier](http://joelglovier.com/writing/) - Great Jekyll articles. I used Joel's feed.xml in this repository.
-- [David Furnes](https://github.com/dfurnes), [Jon Uy](https://github.com/jonuy), [Luke Patton](https://github.com/lkpttn) - Thanks for the design/code reviews.
-- [Bart Kiers](https://github.com/bkiers), [Florian Simon](https://github.com/vermluh), [Henry Stanley](https://github.com/henryaj), [Hun Jae Lee](https://github.com/hunjaelee), [Javier Cejudo](https://github.com/javiercejudo), [Peter Etelej](https://github.com/etelej), [Ben Abbott](https://github.com/jaminscript), [Ray Nicholus](https://github.com/rnicholus), [Erin Grand](https://github.com/eringrand), [Léo Colombaro](https://github.com/LeoColomb), [Dean Attali](https://github.com/daattali), [Clayton Errington](https://github.com/cjerrington), [Colton Fitzgerald](https://github.com/coltonfitzgerald), [Trace Mayer](https://github.com/sunnankar) - Thanks for your [fantastic contributions](https://github.com/barryclark/jekyll-now/commits/master) to the project!
+## Deployment
 
-## Contributing
+### GitHub Pages
 
-Issues and Pull Requests are greatly appreciated. If you've never contributed to an open source project before I'm more than happy to walk you through how to create a pull request.
+This site is designed to work with GitHub Pages:
 
-You can start by [opening an issue](https://github.com/barryclark/jekyll-now/issues/new) describing the problem that you're looking to resolve and we'll go from there.
+1. Push your changes to the `master` branch
+2. GitHub Pages will automatically build and deploy
+3. Site will be live at `https://yourusername.github.io/`
 
-I want to keep Jekyll Now as minimal as possible. Every line of code should be one that's useful to 90% of the people using it. Please bear that in mind when submitting feature requests. If it's not something that most people will use, it probably won't get merged. :guardsman:
+### Custom Domain
+
+To use a custom domain:
+1. Add a `CNAME` file with your domain name
+2. Configure DNS records with your domain provider
+3. Update `url` in `_config.yml`
+
+## Troubleshooting
+
+### Jekyll Command Not Found
+
+If `jekyll` command is not found after installation:
+
+1. Ensure Ruby gems bin directory is in your PATH:
+   ```bash
+   echo 'export PATH="/opt/homebrew/lib/ruby/gems/4.0.0/bin:$PATH"' >> ~/.zshrc
+   source ~/.zshrc
+   ```
+
+2. Or run the setup script again: `./setup.sh`
+
+### Ruby Version Too Old
+
+If you see errors about Ruby version:
+
+```bash
+brew install ruby
+# Then add to PATH as shown in setup.sh
+```
+
+### Permission Errors
+
+Don't use `sudo` with gem commands. Instead:
+- Install Ruby via Homebrew (not system Ruby)
+- Or use `gem install --user-install`
+
+### Port Already in Use
+
+If port 4000 is already in use:
+
+```bash
+# Find and kill the process
+lsof -ti:4000 | xargs kill -9
+
+# Or use a different port
+jekyll serve --port 4001
+```
+
+## Design Philosophy
+
+The site uses a simple, retro HTML design inspired by classic web aesthetics:
+- Clean, bordered sections with minimal styling
+- Classic blue hyperlinks (unvisited: #0000ee, visited: #551a8b)
+- Simple gray/black color scheme
+- No fancy animations or transitions
+- Straightforward, readable typography
+- Functional, no-nonsense layout
+
+## Contact
+
+- **Email**: drifter.pump.17@icloud.com
+- **GitHub**: [@Julian-Jurai](https://github.com/Julian-Jurai)
+- **LinkedIn**: [julian-jurai](https://linkedin.com/in/julian-jurai)
+- **Location**: Boston, MA
+
+## License
+
+This is a personal website. Feel free to fork and adapt for your own use, but please don't copy content directly.
