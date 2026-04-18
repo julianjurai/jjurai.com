@@ -229,8 +229,8 @@ This comprehensive narrative traces Islam's 1,400-year journey through distinct 
 
 This blog post employs chronological organization with comprehensive citations, maps, and images to make this vast history accessible and engaging. Navigation anchors throughout allow readers to easily bookmark and return to specific sections.
 
-![Map of Islamic Expansion 622-750 CE](https://www.worldhistory.org/img/r/p/1500x1500/11457.jpg)
-*[Source: World History Encyclopedia - Expansion of Early Islamic Caliphates](https://www.worldhistory.org/image/11457/expansion-of-early-islamic-caliphates/)*
+![Map of Islamic Expansion 622-750 CE](/assets/images/islamic-history/islamic-expansion-map.jpg)
+*Map showing the expansion of the Islamic Caliphates from 622-750 CE. Source: Wikimedia Commons (Public Domain)*
 
 ---
 
@@ -261,8 +261,6 @@ By the 6th century CE, Mecca rose to prominence by successfully diverting carava
 
 The Quraysh tribe, which controlled Mecca, became skilled merchants and traders. They joined the lucrative spice trade and created a network of agreements with northern and southern tribes, allowing caravans to move freely from Yemen to Byzantium or Iraq.
 
-![Map of Arabian Peninsula 750 CE](https://timemaps.com/history/arabia-750ad/)
-*[Source: TimeMaps - Map of Arabia, 750 CE](https://timemaps.com/history/arabia-750ad/)*
 
 **Social and Political Structure**
 
@@ -497,8 +495,6 @@ Warned of the conspiracy, Muhammad devised an escape plan. On the night of **Thu
 
 Upon reaching **Quba**, a settlement on Medina's outskirts, Muhammad established the **Quba Mosque**, considered the first mosque built in Islam. After waiting for Ali and his family to arrive safely, Muhammad proceeded to Medina, where the inhabitants warmly welcomed him.
 
-![Map of the Hijra Route](https://ummaharchive.org/p/map-of-the-hijrah)
-*[Source: Ummah Archive - Map of the Hijrah](https://ummaharchive.org/p/map-of-the-hijrah)*
 
 **Historical Significance:**
 
@@ -667,8 +663,6 @@ Umar established the system of *dhimmi* (protected persons) status for non-Musli
 - Alexandria captured in 642 CE
 - Coptic Christian majority welcomed Muslim rule over Byzantine persecution
 
-![Map of Rashidun Caliphate Expansion](https://www.worldhistory.org/img/r/p/1500x1500/11591.jpg)
-*[Source: World History Encyclopedia - Map of the Rashidun Caliphate](https://www.worldhistory.org/image/11591/map-of-the-rashidun-caliphate/)*
 
 **Extent of Conquests:**
 
@@ -820,8 +814,6 @@ On **January 28, 661 CE**, Ali was struck on the head with a poisoned sword by *
 - Many Byzantine troops fell to deaths in ravines or drowned in Yarmouk River
 - End of Byzantine rule in Syria
 
-![Battle of Yarmouk Map](https://www.worldhistory.org/img/r/p/1500x1500/1563.jpg)
-*[Source: World History Encyclopedia - Battle of Yarmouk](https://www.worldhistory.org/article/1563/battle-of-yarmouk/)*
 
 ### Conquest of Persia
 
@@ -925,8 +917,6 @@ Under **Qutayba ibn Muslim**, governor of Khurasan:
 
 The **Battle of Talas (751 CE)** later solidified Muslim control over the western Silk Road.
 
-![Umayyad Caliphate at Greatest Extent 750 CE](https://www.worldhistory.org/img/r/p/1500x1500/8317.jpg)
-*[Source: World History Encyclopedia - Umayyad Conquest, 7th & 8th Centuries CE](https://www.worldhistory.org/image/8317/umayyad-conquest-7th--8th-centuries-ce/)*
 
 **Geographic Extent:**
 
@@ -1058,8 +1048,6 @@ Baghdad's location in Mesopotamia on the Tigris River made it:
 - A meeting point of land and sea Silk Routes
 - A bridge between Iran, India, Central Asia, China and the Arabian Peninsula, Syria, Egypt, and the West
 
-![City Plan of Medieval Baghdad](https://www.worldhistory.org/img/r/p/1500x1500/12003.jpg)
-*[Source: World History Encyclopedia - City Plan of Medieval Baghdad](https://www.worldhistory.org/image/12003/city-plan-of-medieval-baghdad/)*
 
 **Population and Growth:**
 
@@ -1463,8 +1451,6 @@ His legacy as the sixth Imam in Twelver Shia Islam and as a respected teacher in
 
 The Islamic world controlled crucial segments of transcontinental trade networks during the 7th-9th centuries, connecting four continents through overland and maritime routes.
 
-![Trade Routes Map](https://www.metmuseum.org/learn/educators/curriculum-resources/art-of-the-islamic-world/unit-seven/chapter-one/trade-and-travel)
-*[Source: Metropolitan Museum of Art - Trade and Travel](https://www.metmuseum.org/learn/educators/curriculum-resources/art-of-the-islamic-world/unit-seven/chapter-one/trade-and-travel)*
 
 ### Overland Routes
 
@@ -2374,8 +2360,8 @@ The translation movement that emerged in the late 8th century represented one of
 
 Under Caliph Harun al-Rashid (786-809 CE), whose reign has been romanticized in the tales of *One Thousand and One Nights*, the translation movement accelerated. But it was his son, al-Ma'mun (813-833 CE), who institutionalized this quest for knowledge by establishing the Bayt al-Hikma—the House of Wisdom [5].
 
-![House of Wisdom](https://upload.wikimedia.org/wikipedia/commons/5/5e/Maqamat_hariri.jpg)
-*A medieval illustration depicting scholars at work in a library, representing the scholarly environment of the House of Wisdom*
+![House of Wisdom](/assets/images/islamic-history/house-of-wisdom.jpg)
+*A medieval illustration from the Maqamat of al-Hariri depicting scholars at work in a library, representing the scholarly environment of the House of Wisdom. Source: Wikimedia Commons (Public Domain)*
 
 The House of Wisdom was more than a library; it was a research institute, translation bureau, and academy rolled into one. Scholars of different faiths—Muslims, Christians, Jews, Zoroastrians, and others—worked side by side, united by their passion for learning [6]. The institution's director, Hunayn ibn Ishaq (809-873 CE), a Nestorian Christian, exemplified this cosmopolitan spirit. A master of Arabic, Syriac, Greek, and Persian, Hunayn traveled to Byzantine territories seeking rare manuscripts and produced translations of Galen and Hippocrates so precise that they surpassed the quality of existing Greek copies [7].
 
@@ -2457,8 +2443,8 @@ Gradually, Muslim resistance coalesced. The turning point came with Zengi, the T
 
 Zengi's son, Nur al-Din (1118-1174 CE), continued his father's work with even greater success. But Nur al-Din brought something beyond military prowess: a vision of Islamic renewal through jihad. He positioned himself as a defender of Sunni orthodoxy against both Crusader aggression and Shi'a Fatimid "heresy." He established madrasas (schools of Islamic law), rebuilt mosques, and patronized scholars, linking military resistance with religious revival [51].
 
-![Saladin](https://upload.wikimedia.org/wikipedia/commons/7/7e/Saladin_the_Victorious.jpg)
-*19th-century painting depicting Saladin, the most famous Muslim leader of the Crusades era*
+![Saladin](/assets/images/islamic-history/saladin.jpg)
+*19th-century painting depicting Saladin, the most famous Muslim leader of the Crusades era. Source: Wikimedia Commons (Public Domain)*
 
 Nur al-Din's most consequential decision was sending his Kurdish general, Salah al-Din Yusuf ibn Ayyub—known to history as Saladin—to Egypt in 1169. There, Saladin maneuvered skillfully, first as vizier to the Fatimid caliph, then, after the caliph's death in 1171, as the effective ruler who abolished the Fatimid Caliphate and restored nominal Abbasid authority [52].
 
@@ -2568,8 +2554,6 @@ These hopes proved tragically misplaced. When Hulagu's forces encircled Baghdad 
 
 Baghdad's defenses, neglected for generations, could not withstand the Mongols' superior siege craft. On February 10, 1258, after a siege of less than two weeks, Mongol forces breached the walls. What followed ranks among history's great catastrophes.
 
-![Fall of Baghdad](https://upload.wikimedia.org/wikipedia/commons/5/59/Destruction_of_Baghdad_by_the_Mongols_in_1258.jpg)
-*Persian miniature depicting the Mongol sack of Baghdad in 1258*
 
 The Mongols methodically sacked the city. For a week, they massacred the population, sparing only Christians (protected by Hulagu's Christian wife, Doquz Khatun) and some skilled artisans. Estimates of casualties range from 200,000 to over a million—numbers debated by modern scholars but unanimously agreed to represent an immense death toll [99]. The Tigris River reportedly ran black with ink from the countless books thrown into it from destroyed libraries and red with blood from the countless victims [100].
 
@@ -2624,8 +2608,6 @@ Economically, the Mamluk Sultanate controlled the vital spice trade between the 
 
 Cairo flourished as perhaps the greatest city of the late medieval Islamic world. Its population may have reached 500,000, making it one of the world's largest cities. The Mamluks built magnificent architectural complexes combining mosques, madrasas, mausoleums, and fountains. The mosques of Sultan Hassan, Sultan Qalawun, and Barquq showcased Islamic architecture at its finest—soaring domes, intricate geometric patterns, masterful stonework, and innovative engineering [122].
 
-![Mamluk Architecture](https://upload.wikimedia.org/wikipedia/commons/7/7e/Cairo%2C_Moschea_del_Sultano_Hassan.jpg)
-*The Mosque-Madrasa of Sultan Hassan in Cairo, one of the masterpieces of Mamluk architecture*
 
 Mamluk patronage extended beyond architecture. They supported scholarship, particularly in Islamic jurisprudence, hadith studies, and history. The great historian Ibn Khaldun (1332-1406) spent his final years in Mamluk Cairo, completing his monumental work *Muqaddimah* (Introduction to History), which pioneered sociology and historiography with its analysis of the cyclical rise and fall of dynasties [123].
 
@@ -2669,8 +2651,8 @@ The siege began on April 6, 1453. Inside the walls, Emperor Constantine XI Palai
 
 On May 29, 1453, Mehmed ordered a final assault. After hours of fierce fighting, Ottoman forces breached the walls. Constantine XI reportedly died fighting in the streets. By midday, the city had fallen. The soldiers were given the customary three days of looting, though Mehmed ordered restraint compared to many medieval sackings. The great church of Hagia Sophia was converted into a mosque [139].
 
-![Conquest of Constantinople](https://upload.wikimedia.org/wikipedia/commons/f/f8/Zonaro_GatesofConst.jpg)
-*19th-century painting depicting the Ottoman conquest of Constantinople in 1453*
+![Conquest of Constantinople](/assets/images/islamic-history/conquest-constantinople.jpg)
+*19th-century painting by Fausto Zonaro depicting the Ottoman conquest of Constantinople in 1453. Source: Wikimedia Commons (Public Domain)*
 
 The conquest shocked Christian Europe but electrified the Muslim world. The city that had withstood sieges for a millennium had fallen. Mehmed, only 21 years old, had achieved what countless Muslim rulers had dreamed of since the Prophet's time. He styled himself "Kayser-i Rum" (Caesar of Rome), claiming to be the heir to the Roman Empire [140].
 
@@ -2727,8 +2709,6 @@ Abbas's military reforms were crucial. He reduced dependence on the fractious Qi
 
 In 1598, Abbas made a bold decision: he moved the capital from Qazvin to Isfahan, a city in central Iran. Under his patronage, Isfahan was transformed into one of the world's most beautiful cities. The famous saying "Isfahan nesf-e jahan" ("Isfahan is half the world") reflected its magnificence. Abbas commissioned the vast Naqsh-e Jahan Square, surrounded by the Shah Mosque, Ali Qapu Palace, and Sheikh Lotfollah Mosque—architectural masterpieces showcasing Persian Islamic aesthetics [165].
 
-![Isfahan](https://upload.wikimedia.org/wikipedia/commons/3/3d/Shah_Mosque_Isfahan_dome_ceiling.jpg)
-*The spectacular tile work and dome interior of the Shah Mosque in Isfahan*
 
 Safavid architecture represented a distinctive Persian aesthetic. The mosques featured stunning tilework—complex geometric and floral patterns in blues, turquoises, and yellows creating surfaces of otherworldly beauty. The iwans (vaulted halls) and domes combined monumentality with delicacy. The Khaju and Si-o-se-pol bridges across the Zayandeh River served as both infrastructure and social spaces, with tea houses and meeting areas [166].
 
@@ -2767,8 +2747,6 @@ Administratively, Akbar created the mansabdari system, where officials were rank
 
 Akbar's court became a center of culture and learning. He patronized Persian, Hindi, and Sanskrit literature. His atelier produced magnificent illustrated manuscripts combining Persian, Hindu, and European artistic influences. The Mughal miniature painting style, refined under Akbar, represents one of art history's great achievements—intricate, colorful works depicting courtly life, battles, nature, and spiritual themes [182].
 
-![Mughal Miniature](https://upload.wikimedia.org/wikipedia/commons/8/87/Akbar_inspects_the_elephant_Hawa%27i.jpg)
-*Mughal miniature painting showing Emperor Akbar inspecting the elephant Hawa'i*
 
 Architecturally, Akbar commissioned innovative structures blending Persian, Indian, and Central Asian styles. His capital at Fatehpur Sikri, though abandoned after only 14 years due to water shortages, showcased this synthesis—red sandstone buildings with Hindu design elements, courtyards, and gardens reflecting Timurid influences [183].
 
@@ -2850,8 +2828,6 @@ Muhammad Ali's Egypt became a model, showing that reform was possible. His dynas
 
 The 19th century witnessed accelerating European imperial expansion into Muslim lands. France invaded Algeria in 1830, beginning a brutal conquest that took decades and cost hundreds of thousands of Algerian lives. The colonization of Algeria involved mass European settlement, displacement of indigenous populations, and systematic exploitation—colonial domination at its most naked [217].
 
-![Colonial Expansion](https://upload.wikimedia.org/wikipedia/commons/b/bd/Colonial_Empires_1945.png)
-*Map showing European colonial empires at their peak, including vast Muslim territories*
 
 In South Asia, the British East India Company's control expanded relentlessly. The 1857 uprising—called the Sepoy Mutiny by British, the First War of Independence by many Indians—was brutally suppressed, after which the British Crown assumed direct control, ending even the fiction of Mughal sovereignty. Queen Victoria became Empress of India, and the Indian subcontinent became the "jewel in the crown" of the British Empire [218].
 
@@ -2956,8 +2932,6 @@ Protests beginning in 1977 escalated into mass demonstrations. The Shah's repres
 
 The revolution's initial coalition soon fractured. Khomeini and his clerical allies consolidated power, sidelining liberals, leftists, and moderate religious figures. A new constitution created a unique system: a Supreme Leader (Khomeini) holding ultimate authority as God's representative, overseeing elected presidents and parliaments. This "guardianship of the jurist" (velayat-e faqih) made clerics the ultimate arbiters of political power [259].
 
-![Ayatollah Khomeini](https://upload.wikimedia.org/wikipedia/commons/1/14/Ruhollah_Khomeini_portrait.jpg)
-*Ayatollah Ruhollah Khomeini, leader of the Iranian Revolution and founder of the Islamic Republic*
 
 The revolution took on increasingly radical character. Activists seized the U.S. Embassy in November 1979, holding 52 Americans hostage for 444 days, an act Khomeini endorsed. Revolutionary courts executed hundreds associated with the old regime. Islamic dress codes were enforced. Western cultural influences were purged. Khomeini declared the revolution's message was for export, calling on Muslims everywhere to rise against oppressive rulers [260].
 
