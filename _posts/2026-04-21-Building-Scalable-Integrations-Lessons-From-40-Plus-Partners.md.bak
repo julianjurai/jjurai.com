@@ -39,8 +39,6 @@ After building 40+ integrations with third-party APIs (property management syste
 
 This post documents the patterns, strategies, and hard lessons learned from building a production integration system that processes millions of API calls daily.
 
-*Yes, I used a vibe helper to format and draw these pretty diagrams, but the lessons are real and tried.*
-
 ---
 
 ## Architecture Overview
@@ -117,7 +115,7 @@ The most important architectural decision was implementing a driver pattern that
 
 ### Driver Architecture
 
-```text
+```
 ┌─────────────────────────────────────────────────────────────┐
 │                      Abstract Driver                         │
 │                                                              │
@@ -199,7 +197,7 @@ We use Celery with RabbitMQ for distributed task processing. The key insight: **
 
 #### Task Hierarchy
 
-```text
+```
 ┌────────────────────────────────────────────────────────────┐
 │  import_all_properties() - Master Task (runs every 4h)    │
 │                                                            │
@@ -296,7 +294,7 @@ This is where theory meets brutal reality. Every API has different rate limits, 
 
 ### Common Rate Limit Patterns
 
-```text
+```
 ┌────────────────────────────────────────────────────────────────┐
 │                    Rate Limit Patterns                         │
 ├────────────────────────────────────────────────────────────────┤
@@ -511,7 +509,7 @@ else:
 
 Stop sending tasks when partner API is down:
 
-```text
+```
 ┌─────────────────────────────────────────────────────────┐
 │                  Circuit Breaker States                  │
 ├─────────────────────────────────────────────────────────┤
@@ -597,7 +595,7 @@ celery -A app worker -Q high_priority,normal_priority,low_priority
 
 The nightmare scenario: workers crash at 2 AM, scheduled tasks keep queuing.
 
-```text
+```
 ┌────────────────────────────────────────────────────────────────┐
 │              Worker Downtime Disaster Timeline                  │
 ├────────────────────────────────────────────────────────────────┤
@@ -846,7 +844,7 @@ def emergency_queue_processor():
 
 Not all errors are equal. Classification determines retry strategy:
 
-```text
+```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Error Categories                          │
 ├─────────────────────────────────────────────────────────────┤
@@ -1007,7 +1005,7 @@ session.auth = ApiKeyAuth(api_key)
 
 ### Pattern 2: OAuth 2.0 (Common, Complex)
 
-```text
+```
 ┌──────────────────────────────────────────────────────────────┐
 │                   OAuth 2.0 Flow                             │
 ├──────────────────────────────────────────────────────────────┤
@@ -1257,7 +1255,7 @@ You can't fix what you can't see. Comprehensive monitoring is non-negotiable.
 
 ### Metrics to Track
 
-```text
+```
 ┌──────────────────────────────────────────────────────────────┐
 │                    Monitoring Dashboard                       │
 ├──────────────────────────────────────────────────────────────┤
@@ -2039,7 +2037,7 @@ def import_all_properties_chunked(self, integration_id):
 
 ### Memory Management Checklist
 
-```text
+```
 ┌────────────────────────────────────────────────────────────┐
 │           Memory Optimization Checklist                     │
 ├────────────────────────────────────────────────────────────┤
