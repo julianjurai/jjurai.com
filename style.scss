@@ -809,6 +809,37 @@ footer {
   }
 }
 
+//
+// ASCII Diagram Styling - Force light mode for readability
+//
+div[style*="color-scheme: light"] {
+  background: #ffffff !important;
+  color-scheme: light !important;
+}
+
+div[style*="color-scheme: light"] pre {
+  color: #000000 !important;
+  background: #ffffff !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  color-scheme: light !important;
+}
+
+// Prevent dark mode from affecting diagrams
+@media (prefers-color-scheme: dark) {
+  div[style*="color-scheme: light"] {
+    background: #ffffff !important;
+  }
+
+  div[style*="color-scheme: light"] pre {
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+}
+
 // Settled on moving the import of syntax highlighting to the bottom of the CSS
 // ... Otherwise it really bloats up the top of the CSS file and makes it difficult to find the start
 @import "highlights";

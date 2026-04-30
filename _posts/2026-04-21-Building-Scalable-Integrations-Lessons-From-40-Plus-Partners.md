@@ -47,8 +47,8 @@ This post documents the patterns, strategies, and hard lessons learned from buil
 
 ### System Topology
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌─────────────────────────────────────────────────────────────────┐
 │                        APPLICATION LAYER                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │   Web API    │  │  Admin UI    │  │   Webhooks   │         │
@@ -99,8 +99,12 @@ This post documents the patterns, strategies, and hard lessons learned from buil
 │   Guesty API     │   │  Airbnb API       │   │  Partner N  │
 │  Rate Limit:     │   │  Rate Limit:      │   │  Rate Limit:│
 │  600 req/min     │   │  200 req/10min    │   │  Varies     │
-└──────────────────┘   └───────────────────┘   └─────────────┘
-```
+└──────────────────┘   └───────────────────┘   └─────────────┘</pre>
+</div>
+
+
+
+
 
 ### Key Design Principles
 
@@ -117,8 +121,8 @@ The most important architectural decision was implementing a driver pattern that
 
 ### Driver Architecture
 
-```text
-┌─────────────────────────────────────────────────────────────┐
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌─────────────────────────────────────────────────────────────┐
 │                      Abstract Driver                         │
 │                                                              │
 │  + get_homes()      : PropertyImportIds                     │
@@ -144,8 +148,12 @@ The most important architectural decision was implementing a driver pattern that
 │                │    │                │   │              │
 │ normalize()    │    │ normalize()    │   │ normalize()  │
 │ validate()     │    │ validate()     │   │ validate()   │
-└────────────────┘    └────────────────┘   └──────────────┘
-```
+└────────────────┘    └────────────────┘   └──────────────┘</pre>
+</div>
+
+
+
+
 
 ### Why This Pattern Works
 
@@ -171,8 +179,8 @@ def import_properties(integration_id: int):
 
 The driver handles all partner-specific complexity internally:
 
-```
-User calls: driver.get_homes()
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">User calls: driver.get_homes()
      │
      ├─> driver.api.authenticate()         # Partner-specific auth
      │
@@ -186,8 +194,12 @@ User calls: driver.get_homes()
      │
      ├─> driver.processor.validate()       # Business logic validation
      │
-     └─> driver.processor.save()           # Persist to database
-```
+     └─> driver.processor.save()           # Persist to database</pre>
+</div>
+
+
+
+
 
 ---
 
@@ -199,8 +211,8 @@ We use Celery with RabbitMQ for distributed task processing. The key insight: **
 
 #### Task Hierarchy
 
-```text
-┌────────────────────────────────────────────────────────────┐
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌────────────────────────────────────────────────────────────┐
 │  import_all_properties() - Master Task (runs every 4h)    │
 │                                                            │
 │  Scans all active integrations                            │
@@ -232,8 +244,12 @@ We use Celery with RabbitMQ for distributed task processing. The key insight: **
 │import_photos    │  │import_reserv. │ │update_... │
 │(integration,    │  │(integration,  │ │           │
 │ property_123)   │  │ property_123) │ │           │
-└─────────────────┘  └───────────────┘ └───────────┘
-```
+└─────────────────┘  └───────────────┘ └───────────┘</pre>
+</div>
+
+
+
+
 
 ### Task Design Principles
 
@@ -296,8 +312,8 @@ This is where theory meets brutal reality. Every API has different rate limits, 
 
 ### Common Rate Limit Patterns
 
-```text
-┌────────────────────────────────────────────────────────────────┐
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌────────────────────────────────────────────────────────────────┐
 │                    Rate Limit Patterns                         │
 ├────────────────────────────────────────────────────────────────┤
 │                                                                │
@@ -325,8 +341,12 @@ This is where theory meets brutal reality. Every API has different rate limits, 
 │    Per second:  10 requests  ─┐                              │
 │    Per minute:  100 requests  ├─ All must be satisfied       │
 │    Per hour:    5000 requests ┘                              │
-└────────────────────────────────────────────────────────────────┘
-```
+└────────────────────────────────────────────────────────────────┘</pre>
+</div>
+
+
+
+
 
 ### Strategy 1: Header-based Rate Limiting
 
@@ -457,8 +477,8 @@ class AdaptiveRateLimiter:
 
 ### The Queue Buildup Problem
 
-```
-Normal Operation:
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">Normal Operation:
 ┌───────┐  100/s   ┌───────┐  100/s   ┌─────────┐
 │ Tasks │────────>│ Queue │────────>│ Workers │
 └───────┘          └───────┘          └─────────┘
@@ -475,8 +495,12 @@ Result:
 • Queue grows unbounded
 • Memory exhaustion
 • Old tasks process stale data
-• Cascading failures
-```
+• Cascading failures</pre>
+</div>
+
+
+
+
 
 ### Solution 1: Task Expiration
 
@@ -511,8 +535,8 @@ else:
 
 Stop sending tasks when partner API is down:
 
-```text
-┌─────────────────────────────────────────────────────────┐
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌─────────────────────────────────────────────────────────┐
 │                  Circuit Breaker States                  │
 ├─────────────────────────────────────────────────────────┤
 │                                                          │
@@ -535,8 +559,12 @@ Stop sending tasks when partner API is down:
 │        │                                                 │
 │        ├─ Success ────> Go to CLOSED                    │
 │        └─ Failure ────> Go to OPEN                      │
-└─────────────────────────────────────────────────────────┘
-```
+└─────────────────────────────────────────────────────────┘</pre>
+</div>
+
+
+
+
 
 Implementation:
 
@@ -597,8 +625,8 @@ celery -A app worker -Q high_priority,normal_priority,low_priority
 
 The nightmare scenario: workers crash at 2 AM, scheduled tasks keep queuing.
 
-```text
-┌────────────────────────────────────────────────────────────────┐
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌────────────────────────────────────────────────────────────────┐
 │              Worker Downtime Disaster Timeline                  │
 ├────────────────────────────────────────────────────────────────┤
 │                                                                 │
@@ -656,8 +684,12 @@ The nightmare scenario: workers crash at 2 AM, scheduled tasks keep queuing.
 │  • Duplicate/conflicting updates                               │
 │  • Waste API quota on stale imports                            │
 │  • Customer data not synced for hours                          │
-└────────────────────────────────────────────────────────────────┘
-```
+└────────────────────────────────────────────────────────────────┘</pre>
+</div>
+
+
+
+
 
 **Defense 1: Worker Health Monitoring**
 
@@ -846,8 +878,8 @@ def emergency_queue_processor():
 
 Not all errors are equal. Classification determines retry strategy:
 
-```text
-┌─────────────────────────────────────────────────────────────┐
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌─────────────────────────────────────────────────────────────┐
 │                    Error Categories                          │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
@@ -878,8 +910,12 @@ Not all errors are equal. Classification determines retry strategy:
 │    • Invalid/malformed response                             │
 │    • Missing required fields                                │
 │    Action: Log for investigation, continue with next        │
-└─────────────────────────────────────────────────────────────┘
-```
+└─────────────────────────────────────────────────────────────┘</pre>
+</div>
+
+
+
+
 
 ### Retry Strategy Implementation
 
@@ -983,14 +1019,18 @@ Every integration handles auth differently. Here are the common patterns:
 
 ### Pattern 1: API Key (Simplest)
 
-```
-Request:
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">Request:
 ┌─────────────────────────────────────────────┐
 │ GET /api/properties                         │
 │ Headers:                                    │
 │   Authorization: Bearer abc123xyz           │
-└─────────────────────────────────────────────┘
-```
+└─────────────────────────────────────────────┘</pre>
+</div>
+
+
+
+
 
 Implementation:
 ```python
@@ -1007,8 +1047,8 @@ session.auth = ApiKeyAuth(api_key)
 
 ### Pattern 2: OAuth 2.0 (Common, Complex)
 
-```text
-┌──────────────────────────────────────────────────────────────┐
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌──────────────────────────────────────────────────────────────┐
 │                   OAuth 2.0 Flow                             │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
@@ -1044,8 +1084,12 @@ session.auth = ApiKeyAuth(api_key)
 │  • Access token: Expires in 1-24 hours                     │
 │  • Refresh token: Expires in 30-90 days                    │
 │  • Refresh proactively before expiration                   │
-└──────────────────────────────────────────────────────────────┘
-```
+└──────────────────────────────────────────────────────────────┘</pre>
+</div>
+
+
+
+
 
 Implementation:
 
@@ -1257,8 +1301,8 @@ You can't fix what you can't see. Comprehensive monitoring is non-negotiable.
 
 ### Metrics to Track
 
-```text
-┌──────────────────────────────────────────────────────────────┐
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌──────────────────────────────────────────────────────────────┐
 │                    Monitoring Dashboard                       │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
@@ -1294,8 +1338,12 @@ You can't fix what you can't see. Comprehensive monitoring is non-negotiable.
 │  • Airbnb          ⚠ Degraded       Rate limited            │
 │  • Booking.com     ✗ Down           Auth failure            │
 │  • CloudBeds       ✓ Healthy        Last run: 5m ago       │
-└──────────────────────────────────────────────────────────────┘
-```
+└──────────────────────────────────────────────────────────────┘</pre>
+</div>
+
+
+
+
 
 ### Implementation
 
@@ -1415,8 +1463,8 @@ Some operations trigger chains of API calls. This is where things get interestin
 
 ### The Problem
 
-```
-Import Properties Request
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">Import Properties Request
     │
     ├─> Fetch property list (1 API call)
     │
@@ -1432,8 +1480,12 @@ With 50 integrations running every hour:
 • 250 API calls/minute
 • 4+ API calls/second
 
-Each partner has different rate limits!
-```
+Each partner has different rate limits!</pre>
+</div>
+
+
+
+
 
 ### Strategy 1: Batching
 
@@ -1551,8 +1603,8 @@ One of the sneakiest failure modes: your integration works perfectly for 10 prop
 
 ### The Memory Bloat Problem
 
-```
-Scenario: Import 5,000 properties for a large customer
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">Scenario: Import 5,000 properties for a large customer
 
 ┌────────────────────────────────────────────────────────────┐
 │                    Memory Usage Timeline                    │
@@ -1577,8 +1629,12 @@ Scenario: Import 5,000 properties for a large customer
 │  • List/dict allocations: ~2x                              │
 │  • Total: ~1.5GB just for raw data                         │
 │  • Peak with processing: 3-8GB!                            │
-└────────────────────────────────────────────────────────────┘
-```
+└────────────────────────────────────────────────────────────┘</pre>
+</div>
+
+
+
+
 
 **Root Causes:**
 1. Loading entire dataset into memory
@@ -2039,8 +2095,8 @@ def import_all_properties_chunked(self, integration_id):
 
 ### Memory Management Checklist
 
-```text
-┌────────────────────────────────────────────────────────────┐
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌────────────────────────────────────────────────────────────┐
 │           Memory Optimization Checklist                     │
 ├────────────────────────────────────────────────────────────┤
 │                                                             │
@@ -2058,8 +2114,12 @@ def import_all_properties_chunked(self, integration_id):
 │  ✓ Use LRU cache with size limits                          │
 │  ✓ Avoid global state accumulation                         │
 │                                                             │
-└────────────────────────────────────────────────────────────┘
-```
+└────────────────────────────────────────────────────────────┘</pre>
+</div>
+
+
+
+
 
 **Key Insight:** Memory issues are like compound interest - small leaks accumulate over time. A 1MB leak per task becomes 1GB after 1,000 tasks. Design for bounded memory usage from day one.
 
@@ -2071,8 +2131,8 @@ Integration data is inherently eventually consistent. Embrace it.
 
 ### Challenge: Concurrent Updates
 
-```
-Scenario: Two workers processing same property
+<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
+<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">Scenario: Two workers processing same property
 
 Worker A                          Worker B
    │                                 │
@@ -2089,8 +2149,12 @@ Worker A                          Worker B
    │                                 │  (from stale cached data)
    │                                 │  Save @ 10:00:06
    │                                 │
-   └─ RESULT: Old data wins! ✗     ─┘
-```
+   └─ RESULT: Old data wins! ✗     ─┘</pre>
+</div>
+
+
+
+
 
 ### Solution 1: Last-Write-Wins with Timestamps
 
