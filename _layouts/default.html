@@ -30,5 +30,85 @@
 
       {% include footer.html %} {% include analytics.html %}
     </div>
+
+    <!-- Mermaid JS for diagram rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+      // Convert markdown code blocks to mermaid divs
+      document.addEventListener('DOMContentLoaded', function() {
+        // Detect color scheme
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // Find all code blocks with language-mermaid class
+        const mermaidBlocks = document.querySelectorAll('code.language-mermaid');
+
+        mermaidBlocks.forEach(function(block) {
+          // Get the mermaid code
+          const code = block.textContent;
+
+          // Create a new div for mermaid
+          const mermaidDiv = document.createElement('div');
+          mermaidDiv.className = 'mermaid';
+          mermaidDiv.textContent = code;
+
+          // Replace the pre>code block with the mermaid div
+          const pre = block.parentElement;
+          pre.parentElement.replaceChild(mermaidDiv, pre);
+        });
+
+        // Initialize mermaid with theme based on color scheme
+        if (isDarkMode) {
+          mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            securityLevel: 'loose',
+            themeVariables: {
+              darkMode: true,
+              background: '#0d0d0d',
+              primaryColor: '#2a2a2a',
+              primaryTextColor: '#e0e0e0',
+              primaryBorderColor: '#555',
+              lineColor: '#888',
+              secondaryColor: '#1a1a1a',
+              tertiaryColor: '#2a2a2a',
+              noteTextColor: '#e0e0e0',
+              noteBkgColor: '#2a2a2a',
+              textColor: '#e0e0e0',
+              mainBkg: '#2a2a2a',
+              nodeBorder: '#555'
+            },
+            flowchart: {
+              useMaxWidth: true,
+              htmlLabels: true,
+              curve: 'basis'
+            }
+          });
+        } else {
+          mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            themeVariables: {
+              primaryColor: '#f4f4f4',
+              primaryTextColor: '#000',
+              primaryBorderColor: '#333',
+              lineColor: '#333',
+              secondaryColor: '#fff',
+              tertiaryColor: '#f4f4f4',
+              mainBkg: '#f4f4f4',
+              nodeBorder: '#333'
+            },
+            flowchart: {
+              useMaxWidth: true,
+              htmlLabels: true,
+              curve: 'basis'
+            }
+          });
+        }
+
+        // Re-render mermaid diagrams
+        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+      });
+    </script>
   </body>
 </html>

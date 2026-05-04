@@ -1198,3 +1198,100 @@ div[style*="color-scheme: light"] pre {
     color: rgba(255, 255, 255, 0.87);
   }
 }
+
+//
+// Mermaid Diagram Styles
+//
+
+.mermaid {
+  background: #fafafa;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  overflow-x: auto;
+  text-align: center;
+  border: 1px solid #ddd;
+
+  @media (prefers-color-scheme: dark) {
+    background: #1a1a1a;
+    border: 1px solid #333;
+  }
+
+  svg {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+  }
+}
+
+// Force visibility for all text elements
+.mermaid .nodeLabel,
+.mermaid .edgeLabel,
+.mermaid text,
+.mermaid tspan {
+  fill: #000 !important;
+  color: #000 !important;
+
+  @media (prefers-color-scheme: dark) {
+    fill: #e0e0e0 !important;
+    color: #e0e0e0 !important;
+  }
+}
+
+// Node styling
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node polygon,
+.mermaid .node path {
+  fill: #f9f9f9 !important;
+  stroke: #333 !important;
+  stroke-width: 2px !important;
+
+  @media (prefers-color-scheme: dark) {
+    fill: #2a2a2a !important;
+    stroke: #666 !important;
+  }
+}
+
+// Edge/arrow styling
+.mermaid .edgePath .path,
+.mermaid line,
+.mermaid path.transition {
+  stroke: #333 !important;
+  stroke-width: 2px !important;
+
+  @media (prefers-color-scheme: dark) {
+    stroke: #888 !important;
+  }
+}
+
+// Arrow heads
+.mermaid marker path {
+  fill: #333 !important;
+
+  @media (prefers-color-scheme: dark) {
+    fill: #888 !important;
+  }
+}
+
+// Cluster/subgraph backgrounds
+.mermaid .cluster rect,
+.mermaid .cluster-label {
+  fill: #f0f0f0 !important;
+  stroke: #bbb !important;
+
+  @media (prefers-color-scheme: dark) {
+    fill: #1a1a1a !important;
+    stroke: #444 !important;
+  }
+}
+
+// Timeline and state diagrams
+.mermaid .statediagram-state rect,
+.mermaid .er.relationshipLabel {
+  fill: #f9f9f9 !important;
+
+  @media (prefers-color-scheme: dark) {
+    fill: #2a2a2a !important;
+  }
+}

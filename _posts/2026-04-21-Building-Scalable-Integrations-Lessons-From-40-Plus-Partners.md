@@ -18,19 +18,21 @@ tags: [engineering, integrations, distributed-systems, scalability, api, archite
 6. [Queue Management & Backpressure](#queue-management--backpressure)
 7. [Error Handling & Retries](#error-handling--retries)
 8. [Authentication Patterns](#authentication-patterns)
-9. [API Changes & Versioning](#api-changes--versioning)
-10. [Monitoring & Observability](#monitoring--observability)
-11. [Cascading Requests](#cascading-requests)
-12. [Memory Management & Batching](#memory-management--batching)
-13. [Data Consistency](#data-consistency)
-14. [Testing Strategies](#testing-strategies)
-15. [Lessons Learned](#lessons-learned)
+9. [Webhook Handling](#webhook-handling)
+10. [Architecture Decision Trees](#architecture-decision-trees)
+11. [API Changes & Versioning](#api-changes--versioning)
+12. [Monitoring & Observability](#monitoring--observability)
+13. [Cascading Requests](#cascading-requests)
+14. [Memory Management & Batching](#memory-management--batching)
+15. [Data Consistency](#data-consistency)
+16. [Testing Strategies](#testing-strategies)
+17. [Lessons Learned](#lessons-learned)
 
 ---
 
 ## Introduction
 
-After building 40+ integrations with third-party APIs (property management systems, booking platforms, smart locks, etc.), I've learned that integration engineering is fundamentally different from traditional backend development. You're operating in a hostile environment where:
+After building 40+ integrations with third-party APIs (SaaS platforms, booking systems, CRM tools, etc.), I've learned that integration engineering is fundamentally different from traditional backend development. You're operating in a hostile environment where:
 
 - **You don't control the API** - rate limits, outages, and breaking changes happen without warning
 - **Each partner is unique** - OAuth flows, pagination, error formats, and data models vary wildly
@@ -47,60 +49,51 @@ This post documents the patterns, strategies, and hard lessons learned from buil
 
 ### System Topology
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌─────────────────────────────────────────────────────────────────┐
-│                        APPLICATION LAYER                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │   Web API    │  │  Admin UI    │  │   Webhooks   │         │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │
-└─────────┼──────────────────┼──────────────────┼─────────────────┘
-          │                  │                  │
-          └──────────────────┴──────────────────┘
-                             │
-┌────────────────────────────┼─────────────────────────────────────┐
-│                   INTEGRATION ORCHESTRATION                       │
-│                            │                                      │
-│   ┌────────────────────────▼────────────────────────┐           │
-│   │         Task Scheduler (Celery Beat)            │           │
-│   │  • Periodic imports (properties, reservations)  │           │
-│   │  • Health checks                                │           │
-│   └────────────────────┬────────────────────────────┘           │
-│                        │                                         │
-│   ┌────────────────────▼────────────────────────────┐           │
-│   │           Message Queue (RabbitMQ/Redis)        │           │
-│   │                                                  │           │
-│   │  ┌─────────────┐  ┌─────────────┐ ┌──────────┐ │           │
-│   │  │ properties  │  │ reservations│ │  photos  │ │           │
-│   │  │   queue     │  │   queue     │ │  queue   │ │           │
-│   │  └─────────────┘  └─────────────┘ └──────────┘ │           │
-│   └─────────────────────────────────────────────────┘           │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-          ┌───────────────┴───────────────┬───────────────┐
-          │                               │               │
-┌─────────▼──────────┐     ┌──────────────▼────┐  ┌──────▼──────┐
-│  Worker Pool 1     │     │  Worker Pool 2    │  │ Worker N    │
-│  ┌──────────────┐  │     │  ┌──────────────┐ │  │ ┌─────────┐ │
-│  │   Driver     │  │     │  │   Driver     │ │  │ │ Driver  │ │
-│  │   Factory    │  │     │  │   Factory    │ │  │ │ Factory │ │
-│  └──────┬───────┘  │     │  └──────┬───────┘ │  │ └────┬────┘ │
-│         │          │     │         │         │  │      │      │
-│  ┌──────▼───────┐  │     │  ┌──────▼───────┐ │  │ ┌────▼────┐ │
-│  │ API Client   │  │     │  │ API Client   │ │  │ │  API    │ │
-│  │ + Adapter    │  │     │  │ + Adapter    │ │  │ │ Client  │ │
-│  └──────────────┘  │     │  └──────────────┘ │  │ └─────────┘ │
-└─────────┬──────────┘     └──────────┬────────┘  └──────┬──────┘
-          │                           │                   │
-          └───────────────┬───────────┴───────────────────┘
-                          │
-          ┌───────────────┴─────────────┬──────────────┐
-          │                             │              │
-┌─────────▼────────┐   ┌────────────────▼──┐   ┌──────▼──────┐
-│   Guesty API     │   │  Airbnb API       │   │  Partner N  │
-│  Rate Limit:     │   │  Rate Limit:      │   │  Rate Limit:│
-│  600 req/min     │   │  200 req/10min    │   │  Varies     │
-└──────────────────┘   └───────────────────┘   └─────────────┘</pre>
-</div>
+```mermaid
+graph TB
+    subgraph APP["Application Layer"]
+        WebAPI["Web API"]
+        AdminUI["Admin UI"]
+        Webhooks["Webhooks"]
+    end
+
+    subgraph ORCH["Integration Orchestration"]
+        Beat["Task Scheduler<br/>(Celery Beat)<br/>• Periodic imports<br/>• Health checks"]
+        Queue["Message Queue<br/>(RabbitMQ/Redis)"]
+
+        subgraph QUEUES["Queues"]
+            PropQ["resources<br/>queue"]
+            ResvQ["transactions<br/>queue"]
+            PhotoQ["media<br/>queue"]
+        end
+    end
+
+    subgraph WORKERS["Worker Pools"]
+        W1["Worker Pool 1<br/>Driver Factory<br/>API Client + Adapter"]
+        W2["Worker Pool 2<br/>Driver Factory<br/>API Client + Adapter"]
+        W3["Worker N<br/>Driver Factory<br/>API Client"]
+    end
+
+    subgraph PARTNERS["Partner APIs"]
+        Guesty["Guesty API<br/>Rate Limit: 600 req/min"]
+        Airbnb["Airbnb API<br/>Rate Limit: 200 req/10min"]
+        PartnerN["Partner N<br/>Rate Limit: Varies"]
+    end
+
+    WebAPI --> Beat
+    AdminUI --> Beat
+    Webhooks --> Beat
+    Beat --> Queue
+    Queue --> PropQ
+    Queue --> ResvQ
+    Queue --> PhotoQ
+    PropQ --> W1
+    ResvQ --> W2
+    PhotoQ --> W3
+    W1 --> Guesty
+    W2 --> Airbnb
+    W3 --> PartnerN
+```
 
 
 
@@ -121,35 +114,56 @@ The most important architectural decision was implementing a driver pattern that
 
 ### Driver Architecture
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌─────────────────────────────────────────────────────────────┐
-│                      Abstract Driver                         │
-│                                                              │
-│  + get_homes()      : PropertyImportIds                     │
-│  + get_reservations(): List[Reservation]                    │
-│  + push_status()    : bool                                  │
-│  + authenticate()   : Token                                 │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-        ┌────────────┴────────────┬─────────────┐
-        │                         │             │
-┌───────▼─────────┐    ┌──────────▼─────┐  ┌───▼──────────┐
-│ GuestyDriver    │    │ AirbnbDriver   │  │ CustomDriver │
-│                 │    │                │  │              │
-│ - api: GuestyAPI│    │ - api: ...     │  │ - api: ...   │
-│ - adapter       │    │ - adapter      │  │ - adapter    │
-│ - processor     │    │ - processor    │  │ - processor  │
-└───────┬─────────┘    └──────┬─────────┘  └───┬──────────┘
-        │                     │                 │
-        │ Uses                │                 │
-        ▼                     ▼                 ▼
-┌────────────────┐    ┌────────────────┐   ┌──────────────┐
-│  GuestyAdapter │    │ AirbnbAdapter  │   │ ... Adapter  │
-│                │    │                │   │              │
-│ normalize()    │    │ normalize()    │   │ normalize()  │
-│ validate()     │    │ validate()     │   │ validate()   │
-└────────────────┘    └────────────────┘   └──────────────┘</pre>
-</div>
+```mermaid
+classDiagram
+    class AbstractDriver {
+        <<abstract>>
+        +get_resources() ResourceImportIds
+        +get_transactions() List~Transaction~
+        +push_status() bool
+        +authenticate() Token
+    }
+
+    class GuestyDriver {
+        -api: GuestyAPI
+        -adapter
+        -processor
+    }
+
+    class AirbnbDriver {
+        -api
+        -adapter
+        -processor
+    }
+
+    class CustomDriver {
+        -api
+        -adapter
+        -processor
+    }
+
+    class GuestyAdapter {
+        +normalize()
+        +validate()
+    }
+
+    class AirbnbAdapter {
+        +normalize()
+        +validate()
+    }
+
+    class Adapter {
+        +normalize()
+        +validate()
+    }
+
+    AbstractDriver <|-- GuestyDriver
+    AbstractDriver <|-- AirbnbDriver
+    AbstractDriver <|-- CustomDriver
+    GuestyDriver --> GuestyAdapter : uses
+    AirbnbDriver --> AirbnbAdapter : uses
+    CustomDriver --> Adapter : uses
+```
 
 
 
@@ -163,39 +177,70 @@ The most important architectural decision was implementing a driver pattern that
 - **Adapter** - Data transformation and normalization
 - **Processor** - Domain-specific operations
 
-**Example: Fetching Properties**
+**Example: Fetching Resources**
 
 ```python
+from dataclasses import dataclass
+from typing import List
+
+@dataclass
+class ResourceImportIds:
+    """Result of get_resources() containing resource IDs by status"""
+    resources_added_ids: List[str]    # Newly created resources
+    resources_updated_ids: List[str]  # Modified resources
+    resources_deleted_ids: List[str]  # Removed resources
+
 # High-level task
 @celery_task
-def import_properties(integration_id: int):
+def import_resources(integration_id: int):
     driver = DriverFactory.get_driver(integration_id)
-    property_ids = driver.get_homes()
+    resource_ids = driver.get_resources()  # Returns ResourceImportIds
 
-    # Schedule dependent tasks
-    for home_id in property_ids.homes_added_ids:
-        import_photos.delay(integration_id, home_id)
+    # Schedule dependent tasks for new and updated resources
+    for resource_id in resource_ids.resources_added_ids:
+        import_media.delay(integration_id, resource_id)
 ```
 
 The driver handles all partner-specific complexity internally:
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">User calls: driver.get_homes()
-     │
-     ├─> driver.api.authenticate()         # Partner-specific auth
-     │
-     ├─> driver.api.fetch_all('listings')  # Paginated API calls
-     │       │
-     │       ├─> check_rate_limit()        # Partner-specific limits
-     │       ├─> retry_with_backoff()      # Handle transient failures
-     │       └─> parse_response()
-     │
-     ├─> driver.adapter.normalize(raw)     # Transform to standard format
-     │
-     ├─> driver.processor.validate()       # Business logic validation
-     │
-     └─> driver.processor.save()           # Persist to database</pre>
-</div>
+```mermaid
+sequenceDiagram
+    participant User
+    participant Driver
+    participant API
+    participant Adapter
+    participant Processor
+    participant DB
+
+    User->>Driver: get_resources()
+    Driver->>API: authenticate()
+    Note right of API: Partner-specific auth
+    API-->>Driver: Token
+
+    Driver->>API: fetch_all('resources')
+    Note right of API: Paginated API calls
+    API->>API: check_rate_limit()
+    Note right of API: Partner-specific limits
+    API->>API: retry_with_backoff()
+    Note right of API: Handle transient failures
+    API->>API: parse_response()
+    API-->>Driver: raw data
+
+    Driver->>Adapter: normalize(raw)
+    Note right of Adapter: Transform to standard format
+    Adapter-->>Driver: normalized data
+
+    Driver->>Processor: validate()
+    Note right of Processor: Business logic validation
+    Processor-->>Driver: validated data
+
+    Driver->>Processor: save()
+    Processor->>DB: persist
+    Note right of DB: Persist to database
+    DB-->>Processor: success
+    Processor-->>Driver: success
+    Driver-->>User: ResourceImportIds
+```
 
 
 
@@ -211,41 +256,34 @@ We use Celery with RabbitMQ for distributed task processing. The key insight: **
 
 #### Task Hierarchy
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌────────────────────────────────────────────────────────────┐
-│  import_all_properties() - Master Task (runs every 4h)    │
-│                                                            │
-│  Scans all active integrations                            │
-└────────────────────┬───────────────────────────────────────┘
-                     │
-         ┌───────────┴───────────────────┬──────────┐
-         │                               │          │
-┌────────▼────────────┐    ┌─────────────▼──┐  ┌───▼───────┐
-│import_properties_   │    │import_properties│  │  ...      │
-│for_company(123)     │    │_for_company(456)│  │           │
-│                     │    │                 │  │           │
-│ • Company-level     │    │                 │  │           │
-│ • Can fail         │    │                 │  │           │
-│   independently    │    │                 │  │           │
-└────────┬────────────┘    └─────────┬───────┘  └───────────┘
-         │                           │
-    ┌────┴────┬─────────┐      ┌────┴─────┬──────┐
-    │         │         │      │          │      │
-┌───▼───┐ ┌──▼───┐ ┌───▼──┐ ┌─▼───┐ ┌────▼─┐ ┌──▼──┐
-│Guesty │ │Airbnb│ │Track │ │...  │ │...   │ │ ... │
-│import │ │import│ │import│ │     │ │      │ │     │
-└───┬───┘ └──┬───┘ └───┬──┘ └─────┘ └──────┘ └─────┘
-    │        │         │
-    └────────┴─────┬───┘
-                   │
-         ┌─────────┴──────────┬──────────┐
-         │                    │          │
-┌────────▼────────┐  ┌────────▼──────┐ ┌▼──────────┐
-│import_photos    │  │import_reserv. │ │update_... │
-│(integration,    │  │(integration,  │ │           │
-│ property_123)   │  │ property_123) │ │           │
-└─────────────────┘  └───────────────┘ └───────────┘</pre>
-</div>
+```mermaid
+graph TD
+    Master["import_all_resources()<br/>Master Task (runs every 4h)<br/>Scans all active integrations"]
+
+    Master --> C1["import_resources_<br/>for_company(123)<br/>• Company-level<br/>• Can fail independently"]
+    Master --> C2["import_resources_<br/>for_company(456)"]
+    Master --> C3["..."]
+
+    C1 --> G1["Partner A<br/>import"]
+    C1 --> A1["Partner B<br/>import"]
+    C1 --> T1["Partner C<br/>import"]
+
+    C2 --> G2["..."]
+    C2 --> A2["..."]
+    C2 --> T2["..."]
+
+    G1 --> Photos["import_media<br/>(integration,<br/>resource_123)"]
+    A1 --> Photos
+    T1 --> Photos
+
+    G1 --> Reserv["import_transactions<br/>(integration,<br/>resource_123)"]
+    A1 --> Reserv
+    T1 --> Reserv
+
+    G1 --> Update["update_..."]
+    A1 --> Update
+    T1 --> Update
+```
 
 
 
@@ -259,25 +297,25 @@ We use Celery with RabbitMQ for distributed task processing. The key insight: **
 @task
 def import_everything(company_id):
     for integration in get_integrations(company_id):
-        properties = api.get_properties()
-        for prop in properties:
-            photos = api.get_photos(prop.id)
-            reservations = api.get_reservations(prop.id)
+        resources = api.get_resources()
+        for resource in resources:
+            media = api.get_media(resource.id)
+            transactions = api.get_transactions(resource.id)
             # ... more work
     # Takes 30+ minutes, blocks worker
 
 # GOOD: Decomposed tasks
 @task
-def import_company_properties(company_id):
+def import_company_resources(company_id):
     for integration in get_integrations(company_id):
-        import_integration_properties.delay(integration.id)
+        import_integration_resources.delay(integration.id)
 
 @task
-def import_integration_properties(integration_id):
+def import_integration_resources(integration_id):
     driver = get_driver(integration_id)
-    props = driver.get_homes()
-    for prop_id in props.homes_added_ids:
-        import_property_details.delay(integration_id, prop_id)
+    resources = driver.get_resources()
+    for resource_id in resources.resources_added_ids:
+        import_resource_details.delay(integration_id, resource_id)
 ```
 
 **2. Independent task failure**
@@ -290,15 +328,22 @@ When one company's integration fails, others continue processing:
 
 **3. Task timeouts and retries**
 ```python
-@celery_task(
+from celery import Celery
+from myapp.exceptions import RateLimitError
+
+app = Celery('tasks')
+
+@app.task(
+    bind=True,  # Required to access self
     max_retries=3,
     default_retry_delay=120,  # 2 minutes
     soft_time_limit=300,      # 5 minutes
     time_limit=360,           # 6 minutes (hard limit)
 )
-def import_properties(integration_id):
+def import_resources(self, integration_id):
     try:
         # ... work
+        pass
     except RateLimitError as e:
         # Exponential backoff
         raise self.retry(exc=e, countdown=min(2 ** self.request.retries * 60, 1800))
@@ -312,37 +357,45 @@ This is where theory meets brutal reality. Every API has different rate limits, 
 
 ### Common Rate Limit Patterns
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌────────────────────────────────────────────────────────────────┐
-│                    Rate Limit Patterns                         │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│ 1. Fixed Window                                               │
-│    ┌────────┬────────┬────────┬────────┐                     │
-│    │ 100req │ 100req │ 100req │ 100req │                     │
-│    └────────┴────────┴────────┴────────┘                     │
-│    0s      60s     120s     180s                              │
-│    Example: "100 requests per minute"                         │
-│    Issue: Burst at window boundary                            │
-│                                                                │
-│ 2. Sliding Window                                             │
-│    ┌──────────────────────────────────┐                      │
-│    │      Last 60 seconds = 100 req   │                      │
-│    └──────────────────────────────────┘                      │
-│         ▲ moves continuously                                  │
-│    Better: No boundary burst                                  │
-│                                                                │
-│ 3. Token Bucket                                               │
-│    Bucket: [●●●○○] (3 tokens available)                      │
-│    Refill: +1 token every 600ms                              │
-│    Burst: Up to bucket size                                   │
-│                                                                │
-│ 4. Multi-tier Limits                                          │
-│    Per second:  10 requests  ─┐                              │
-│    Per minute:  100 requests  ├─ All must be satisfied       │
-│    Per hour:    5000 requests ┘                              │
-└────────────────────────────────────────────────────────────────┘</pre>
-</div>
+```mermaid
+graph TD
+    subgraph RL["Rate Limit Patterns"]
+        subgraph FW["1. Fixed Window"]
+            FW1["Window 1: 100req<br/>0s-60s"]
+            FW2["Window 2: 100req<br/>60s-120s"]
+            FW3["Window 3: 100req<br/>120s-180s"]
+            FW4["Window 4: 100req<br/>180s-240s"]
+            FWNote["Example: '100 requests per minute'<br/>⚠️ Issue: Burst at window boundary"]
+        end
+
+        subgraph SW["2. Sliding Window"]
+            SWWindow["Last 60 seconds = 100 req<br/>↻ moves continuously"]
+            SWNote["✓ Better: No boundary burst"]
+        end
+
+        subgraph TB["3. Token Bucket"]
+            TBBucket["Bucket: [●●●○○]<br/>3 tokens available"]
+            TBRefill["Refill: +1 token every 600ms"]
+            TBBurst["Burst: Up to bucket size"]
+        end
+
+        subgraph MT["4. Multi-tier Limits"]
+            MTSec["Per second: 10 requests"]
+            MTMin["Per minute: 100 requests"]
+            MTHour["Per hour: 5000 requests"]
+            MTNote["All must be satisfied"]
+        end
+    end
+
+    FW1 --> FW2
+    FW2 --> FW3
+    FW3 --> FW4
+    TBRefill --> TBBucket
+    TBBucket --> TBBurst
+    MTSec --> MTNote
+    MTMin --> MTNote
+    MTHour --> MTNote
+```
 
 
 
@@ -418,20 +471,24 @@ class DistributedRateLimiter:
         now = time.time()
         window_start = now - self.window
 
+        # First, check current count
         pipe = self.redis.pipeline()
-        # Remove old entries
         pipe.zremrangebyscore(self.key, 0, window_start)
-        # Count requests in window
         pipe.zcard(self.key)
-        # Add current request
-        pipe.zadd(self.key, {str(now): now})
-        # Set expiry
-        pipe.expire(self.key, self.window)
-
         results = pipe.execute()
         request_count = results[1]
 
-        return request_count < self.max_requests
+        # Only add request if under limit
+        if request_count >= self.max_requests:
+            return False
+
+        # Add the new request
+        pipe = self.redis.pipeline()
+        pipe.zadd(self.key, {str(now): now})
+        pipe.expire(self.key, self.window)
+        pipe.execute()
+
+        return True
 
 # Usage
 limiter = DistributedRateLimiter('guesty_api', max_requests=600, window_seconds=60)
@@ -477,26 +534,20 @@ class AdaptiveRateLimiter:
 
 ### The Queue Buildup Problem
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">Normal Operation:
-┌───────┐  100/s   ┌───────┐  100/s   ┌─────────┐
-│ Tasks │────────>│ Queue │────────>│ Workers │
-└───────┘          └───────┘          └─────────┘
-                   Size: ~10
+```mermaid
+graph LR
+    subgraph Normal["Normal Operation"]
+        N1[Tasks] -->|100/s| N2[Queue<br/>Size: ~10] -->|100/s| N3[Workers]
+    end
 
-Problem: API Slowdown (partner outage, rate limit)
-┌───────┐  100/s   ┌──────────────┐  10/s   ┌─────────┐
-│ Tasks │────────>│    Queue     │───────>│ Workers │
-└───────┘          │              │         └─────────┘
-                   │ Size: 10,000 │   ← Buildup!
-                   └──────────────┘
+    subgraph Problem["Problem: API Slowdown (partner outage, rate limit)"]
+        P1[Tasks] -->|100/s| P2[Queue<br/>Size: 10,000<br/>⚠️ Buildup!] -->|10/s| P3[Workers]
+    end
 
-Result:
-• Queue grows unbounded
-• Memory exhaustion
-• Old tasks process stale data
-• Cascading failures</pre>
-</div>
+    subgraph Result["Result"]
+        R1["• Queue grows unbounded<br/>• Memory exhaustion<br/>• Old tasks process stale data<br/>• Cascading failures"]
+    end
+```
 
 
 
@@ -506,7 +557,7 @@ Result:
 
 ```python
 @celery_task(expires=300)  # Task expires after 5 minutes
-def import_reservations(integration_id, property_id):
+def import_transactions(integration_id, resource_id):
     # If this task waits in queue > 5 minutes, discard it
     # Fresh data will be imported in next scheduled run
     pass
@@ -525,8 +576,8 @@ def should_enqueue_task(queue_name):
     return True
 
 # Usage
-if should_enqueue_task('reservations'):
-    import_reservations.delay(integration_id, property_id)
+if should_enqueue_task('transactions'):
+    import_transactions.delay(integration_id, resource_id)
 else:
     logger.info(f"Skipping task - queue backed up")
 ```
@@ -535,32 +586,26 @@ else:
 
 Stop sending tasks when partner API is down:
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌─────────────────────────────────────────────────────────┐
-│                  Circuit Breaker States                  │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│   CLOSED (Normal)                                       │
-│   ┌────────┐                                            │
-│   │ Success│  ─────────> Allow requests                 │
-│   └────────┘                                            │
-│        │                                                 │
-│        │ Failure threshold exceeded (5 failures)        │
-│        ▼                                                 │
-│   ┌────────┐                                            │
-│   │  OPEN  │  ─────────> Reject requests (fail fast)   │
-│   └────────┘             Return cached/default data     │
-│        │                                                 │
-│        │ After timeout (60s)                            │
-│        ▼                                                 │
-│   ┌──────────┐                                          │
-│   │ HALF-OPEN│  ───────> Allow limited requests        │
-│   └──────────┘           (test if API recovered)        │
-│        │                                                 │
-│        ├─ Success ────> Go to CLOSED                    │
-│        └─ Failure ────> Go to OPEN                      │
-└─────────────────────────────────────────────────────────┘</pre>
-</div>
+```mermaid
+stateDiagram-v2
+    [*] --> CLOSED
+
+    CLOSED: CLOSED (Normal)
+    CLOSED: ✓ Allow requests
+
+    OPEN: OPEN
+    OPEN: ✗ Reject requests (fail fast)
+    OPEN: Return cached/default data
+
+    HALF_OPEN: HALF-OPEN
+    HALF_OPEN: ⚡ Allow limited requests
+    HALF_OPEN: (test if API recovered)
+
+    CLOSED --> OPEN: Failure threshold exceeded<br/>(5 failures)
+    OPEN --> HALF_OPEN: After timeout (60s)
+    HALF_OPEN --> CLOSED: Success
+    HALF_OPEN --> OPEN: Failure
+```
 
 
 
@@ -599,18 +644,18 @@ Not all tasks are equal:
 ```python
 # High priority: User-initiated actions
 @celery_task(queue='high_priority')
-def sync_single_property(property_id):
+def sync_single_resource(resource_id):
     # User clicked "sync now" - should happen immediately
     pass
 
 # Normal priority: Scheduled imports
 @celery_task(queue='normal_priority')
-def import_properties(integration_id):
+def import_resources(integration_id):
     pass
 
 # Low priority: Non-critical updates
 @celery_task(queue='low_priority')
-def import_photos(property_id):
+def import_media(resource_id):
     # Nice to have but not critical
     pass
 ```
@@ -625,67 +670,46 @@ celery -A app worker -Q high_priority,normal_priority,low_priority
 
 The nightmare scenario: workers crash at 2 AM, scheduled tasks keep queuing.
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌────────────────────────────────────────────────────────────────┐
-│              Worker Downtime Disaster Timeline                  │
-├────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  00:00                    Normal Operation                     │
-│  ┌──────────┐                                                  │
-│  │ Worker 1 │───┐                                              │
-│  └──────────┘   │                                              │
-│  ┌──────────┐   ├─> [ Queue: 50 tasks ] ──> Processing OK     │
-│  │ Worker 2 │───┤                                              │
-│  └──────────┘   │                                              │
-│  ┌──────────┐   │                                              │
-│  │ Worker 3 │───┘                                              │
-│  └──────────┘                                                  │
-│                                                                 │
-│  02:15                    ⚠ Disaster Strikes                   │
-│  ┌──────────┐                                                  │
-│  │ Worker 1 │ ✗ CRASHED (OOM)                                 │
-│  └──────────┘                                                  │
-│  ┌──────────┐                                                  │
-│  │ Worker 2 │ ✗ CRASHED (OOM)                                 │
-│  └──────────┘                                                  │
-│  ┌──────────┐                                                  │
-│  │ Worker 3 │ ✗ CRASHED (OOM)                                 │
-│  └──────────┘                                                  │
-│                                                                 │
-│      [ Queue: 50 tasks ] ──> Nobody processing!                │
-│                                                                 │
-│  02:20        Celery Beat keeps scheduling                     │
-│      ┌────────────────────┐                                    │
-│      │  New tasks added!  │                                    │
-│      └─────────┬──────────┘                                    │
-│                ▼                                                │
-│      [ Queue: 250 tasks ]  (+200)                              │
-│                                                                 │
-│  02:30        More scheduled tasks arrive                      │
-│                ▼                                                │
-│      [ Queue: 850 tasks ]  (+600)                              │
-│                                                                 │
-│  03:00        Queue explosion                                  │
-│                ▼                                                │
-│      [ Queue: 2,450 tasks ]  (+1,600)                          │
-│                                                                 │
-│  06:00        Engineer wakes up                                │
-│      ┌─────────────────────────────────────┐                  │
-│      │ ALERT: 10,000 tasks in queue!       │                  │
-│      │ Oldest task age: 3h 45m             │                  │
-│      │ No workers active since 02:15       │                  │
-│      └─────────────────────────────────────┘                  │
-│                ▼                                                │
-│      [ Queue: 10,000+ tasks ]  (+7,550)                        │
-│                                                                 │
-│  Problems:                                                     │
-│  • Most tasks are hours old (stale data)                       │
-│  • Will take 10+ hours to drain at normal rate                │
-│  • Duplicate/conflicting updates                               │
-│  • Waste API quota on stale imports                            │
-│  • Customer data not synced for hours                          │
-└────────────────────────────────────────────────────────────────┘</pre>
-</div>
+```mermaid
+timeline
+    title Worker Downtime Disaster Timeline
+
+    section 00:00 - Normal Operation
+        Workers Active : Worker 1, Worker 2, Worker 3
+        Queue Size : 50 tasks
+        Status : ✓ Processing OK
+
+    section 02:15 - Disaster Strikes
+        Workers Crash : ✗ Worker 1 CRASHED (OOM)
+                      : ✗ Worker 2 CRASHED (OOM)
+                      : ✗ Worker 3 CRASHED (OOM)
+        Queue Status : 50 tasks - Nobody processing!
+
+    section 02:20 - Tasks Keep Coming
+        Celery Beat : New tasks added!
+        Queue Growth : 250 tasks (+200)
+
+    section 02:30 - Backlog Growing
+        More Tasks : Scheduled tasks arrive
+        Queue Growth : 850 tasks (+600)
+
+    section 03:00 - Queue Explosion
+        Critical : Queue explosion!
+        Queue Growth : 2,450 tasks (+1,600)
+
+    section 06:00 - Engineer Wakes Up
+        Alert : ⚠️ 10,000 tasks in queue!
+              : Oldest task age: 3h 45m
+              : No workers active since 02:15
+        Queue Growth : 10,000+ tasks (+7,550)
+
+    section Problems
+        Impact : • Tasks hours old (stale data)
+               : • 10+ hours to drain
+               : • Duplicate/conflicting updates
+               : • Wasted API quota
+               : • Customer data not synced
+```
 
 
 
@@ -878,40 +902,27 @@ def emergency_queue_processor():
 
 Not all errors are equal. Classification determines retry strategy:
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌─────────────────────────────────────────────────────────────┐
-│                    Error Categories                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│ 1. TRANSIENT (Retry immediately)                            │
-│    • 500 Internal Server Error                              │
-│    • 502 Bad Gateway                                        │
-│    • 503 Service Unavailable                                │
-│    • Network timeout                                        │
-│    • Connection refused                                     │
-│    Action: Retry with exponential backoff                   │
-│                                                              │
-│ 2. RATE LIMIT (Retry with delay)                            │
-│    • 429 Too Many Requests                                  │
-│    Action: Wait for Retry-After header, then retry         │
-│                                                              │
-│ 3. CLIENT ERROR (Don't retry)                               │
-│    • 400 Bad Request                                        │
-│    • 401 Unauthorized                                       │
-│    • 403 Forbidden                                          │
-│    • 404 Not Found                                          │
-│    Action: Log and skip, possible integration issue         │
-│                                                              │
-│ 4. AUTH ERROR (Refresh token)                               │
-│    • 401 with expired token message                         │
-│    Action: Refresh OAuth token, then retry                  │
-│                                                              │
-│ 5. DATA ERROR (Skip record)                                 │
-│    • Invalid/malformed response                             │
-│    • Missing required fields                                │
-│    Action: Log for investigation, continue with next        │
-└─────────────────────────────────────────────────────────────┘</pre>
-</div>
+```mermaid
+graph TD
+    Error[Error Received]
+
+    Error --> T{Error Type?}
+
+    T -->|TRANSIENT| Transient["1. TRANSIENT<br/>• 500 Internal Server Error<br/>• 502 Bad Gateway<br/>• 503 Service Unavailable<br/>• Network timeout<br/>• Connection refused"]
+    Transient --> TransientAction["⟳ Retry with exponential backoff"]
+
+    T -->|RATE_LIMIT| RateLimit["2. RATE LIMIT<br/>• 429 Too Many Requests"]
+    RateLimit --> RateLimitAction["⏱ Wait for Retry-After header,<br/>then retry"]
+
+    T -->|CLIENT_ERROR| ClientError["3. CLIENT ERROR<br/>• 400 Bad Request<br/>• 401 Unauthorized<br/>• 403 Forbidden<br/>• 404 Not Found"]
+    ClientError --> ClientAction["✗ Log and skip<br/>Possible integration issue"]
+
+    T -->|AUTH_ERROR| AuthError["4. AUTH ERROR<br/>• 401 with expired token message"]
+    AuthError --> AuthAction["🔑 Refresh OAuth token,<br/>then retry"]
+
+    T -->|DATA_ERROR| DataError["5. DATA ERROR<br/>• Invalid/malformed response<br/>• Missing required fields"]
+    DataError --> DataAction["📝 Log for investigation<br/>Continue with next"]
+```
 
 
 
@@ -1019,14 +1030,11 @@ Every integration handles auth differently. Here are the common patterns:
 
 ### Pattern 1: API Key (Simplest)
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">Request:
-┌─────────────────────────────────────────────┐
-│ GET /api/properties                         │
-│ Headers:                                    │
-│   Authorization: Bearer abc123xyz           │
-└─────────────────────────────────────────────┘</pre>
-</div>
+```http
+GET /api/properties HTTP/1.1
+Host: api.partner.com
+Authorization: Bearer abc123xyz
+```
 
 
 
@@ -1047,45 +1055,35 @@ session.auth = ApiKeyAuth(api_key)
 
 ### Pattern 2: OAuth 2.0 (Common, Complex)
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌──────────────────────────────────────────────────────────────┐
-│                   OAuth 2.0 Flow                             │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  Initial Setup (One-time):                                  │
-│  1. User → Auth URL                                         │
-│  2. User grants permission                                  │
-│  3. Redirect with auth code                                 │
-│  4. Exchange code for access + refresh tokens               │
-│                                                              │
-│  Ongoing API Calls:                                         │
-│  ┌──────────────────────────────────────┐                  │
-│  │ Use access token ────> API Call      │                  │
-│  └────────┬─────────────────────────────┘                  │
-│           │                                                  │
-│           ├─ Success ────> Continue                         │
-│           │                                                  │
-│           └─ 401 Unauthorized                               │
-│                    │                                         │
-│                    ▼                                         │
-│              Refresh token flow:                            │
-│              POST /oauth/token                              │
-│              {                                              │
-│                grant_type: "refresh_token",                 │
-│                refresh_token: "xyz...",                     │
-│                client_id: "...",                            │
-│                client_secret: "..."                         │
-│              }                                              │
-│                    │                                         │
-│                    ▼                                         │
-│              New access token ─────> Retry API call        │
-│                                                              │
-│  Token Lifecycle:                                           │
-│  • Access token: Expires in 1-24 hours                     │
-│  • Refresh token: Expires in 30-90 days                    │
-│  • Refresh proactively before expiration                   │
-└──────────────────────────────────────────────────────────────┘</pre>
-</div>
+```mermaid
+sequenceDiagram
+    participant User
+    participant App
+    participant AuthServer as Auth Server
+    participant API
+
+    Note over User,AuthServer: Initial Setup (One-time)
+    User->>AuthServer: 1. Navigate to Auth URL
+    User->>AuthServer: 2. Grant permission
+    AuthServer->>App: 3. Redirect with auth code
+    App->>AuthServer: 4. Exchange code for tokens
+    AuthServer-->>App: Access token + Refresh token
+
+    Note over App,API: Ongoing API Calls
+    App->>API: Use access token
+    alt Success
+        API-->>App: 200 OK - Continue
+    else 401 Unauthorized
+        API-->>App: 401 Unauthorized
+        Note over App,AuthServer: Refresh token flow
+        App->>AuthServer: POST /oauth/token<br/>{<br/>  grant_type: "refresh_token",<br/>  refresh_token: "xyz...",<br/>  client_id: "...",<br/>  client_secret: "..."<br/>}
+        AuthServer-->>App: New access token
+        App->>API: Retry API call with new token
+        API-->>App: 200 OK
+    end
+
+    Note over App: Token Lifecycle:<br/>• Access token: Expires in 1-24 hours<br/>• Refresh token: Expires in 30-90 days<br/>• Refresh proactively before expiration
+```
 
 
 
@@ -1094,6 +1092,13 @@ session.auth = ApiKeyAuth(api_key)
 Implementation:
 
 ```python
+import requests
+from datetime import datetime, timedelta
+
+class OAuthRefreshError(Exception):
+    """Raised when OAuth token refresh fails"""
+    pass
+
 class OAuthSession:
     def __init__(self, integration_id):
         self.integration_id = integration_id
@@ -1111,25 +1116,36 @@ class OAuthSession:
         return datetime.utcnow() + buffer >= self.expires_at
 
     def refresh_access_token(self):
-        response = requests.post(
-            'https://api.partner.com/oauth/token',
-            data={
-                'grant_type': 'refresh_token',
-                'refresh_token': self.refresh_token,
-                'client_id': settings.OAUTH_CLIENT_ID,
-                'client_secret': settings.OAUTH_CLIENT_SECRET,
-            }
-        )
+        try:
+            response = requests.post(
+                'https://api.partner.com/oauth/token',
+                data={
+                    'grant_type': 'refresh_token',
+                    'refresh_token': self.refresh_token,
+                    'client_id': settings.OAUTH_CLIENT_ID,
+                    'client_secret': settings.OAUTH_CLIENT_SECRET,
+                },
+                timeout=30  # Add timeout
+            )
+            response.raise_for_status()
+        except requests.RequestException as e:
+            raise OAuthRefreshError(f"Network error refreshing token: {e}")
 
-        if response.status_code != 200:
-            raise OAuthRefreshError(f"Failed to refresh token: {response.text}")
+        try:
+            data = response.json()
+        except ValueError as e:
+            raise OAuthRefreshError(f"Invalid JSON response: {e}")
 
-        data = response.json()
+        # Validate response has required fields
+        if 'access_token' not in data:
+            raise OAuthRefreshError("No access_token in response")
+
         self.access_token = data['access_token']
         self.refresh_token = data.get('refresh_token', self.refresh_token)
-        self.expires_at = datetime.utcnow() + datetime.timedelta(
-            seconds=data['expires_in']
-        )
+
+        # Handle missing expires_in gracefully
+        expires_in = data.get('expires_in', 3600)  # Default to 1 hour
+        self.expires_at = datetime.utcnow() + datetime.timedelta(seconds=expires_in)
 
         # Persist to database
         self.save_tokens()
@@ -1198,6 +1214,433 @@ def rotate_credentials(integration_id, new_secret):
         raise
 
     return True
+```
+
+---
+
+## Webhook Handling
+
+Many partners send real-time updates via webhooks. Proper webhook handling is critical for keeping data in sync without constant polling.
+
+### Webhook Architecture
+
+```mermaid
+sequenceDiagram
+    participant Partner
+    participant Webhook
+    participant Queue
+    participant Worker
+    participant DB
+
+    Partner->>Webhook: POST /webhooks/{partner}/{id}
+    Note over Webhook: Validate signature
+    Webhook->>Queue: Enqueue webhook task
+    Webhook-->>Partner: 202 Accepted
+    Queue->>Worker: Process webhook
+    Worker->>DB: Update data
+    Worker->>Queue: Trigger dependent tasks
+```
+
+### Implementation
+
+**1. Webhook Endpoint**
+
+```python
+from flask import Flask, request, jsonify
+import hmac
+import hashlib
+
+app = Flask(__name__)
+
+@app.route('/webhooks/<partner>/<int:integration_id>', methods=['POST'])
+def handle_webhook(partner, integration_id):
+    """
+    Generic webhook handler for all partners
+    Validates signature and queues for async processing
+    """
+
+    # 1. Validate signature
+    signature = request.headers.get('X-Webhook-Signature')
+    if not validate_webhook_signature(partner, integration_id, request.data, signature):
+        logger.warning(f"Invalid webhook signature from {partner}")
+        return jsonify({'error': 'Invalid signature'}), 401
+
+    # 2. Log webhook receipt
+    logger.info(
+        "webhook_received",
+        partner=partner,
+        integration_id=integration_id,
+        event_type=request.json.get('event_type'),
+    )
+
+    # 3. Queue for async processing (don't block partner's request)
+    process_webhook.delay(
+        partner=partner,
+        integration_id=integration_id,
+        payload=request.json,
+        received_at=datetime.utcnow().isoformat()
+    )
+
+    # 4. Return immediately
+    return jsonify({'status': 'accepted'}), 202
+
+
+def validate_webhook_signature(partner, integration_id, payload, signature):
+    """Validate webhook signature based on partner's method"""
+
+    integration = get_integration(integration_id)
+    secret = integration.webhook_secret
+
+    if partner == 'partner_a':
+        # HMAC-SHA256
+        expected = hmac.new(
+            secret.encode(),
+            payload,
+            hashlib.sha256
+        ).hexdigest()
+        return hmac.compare_digest(signature, expected)
+
+    elif partner == 'partner_b':
+        # SHA256 hash
+        expected = hashlib.sha256(f"{payload}{secret}".encode()).hexdigest()
+        return hmac.compare_digest(signature, expected)
+
+    else:
+        logger.error(f"Unknown partner signature validation: {partner}")
+        return False
+```
+
+**2. Webhook Processing Task**
+
+```python
+@celery_task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60,
+)
+def process_webhook(self, partner, integration_id, payload, received_at):
+    """Process webhook payload asynchronously"""
+
+    try:
+        event_type = payload.get('event_type')
+
+        # Route to appropriate handler
+        if event_type == 'resource.created':
+            handle_resource_created(integration_id, payload['data'])
+
+        elif event_type == 'resource.updated':
+            handle_resource_updated(integration_id, payload['data'])
+
+        elif event_type == 'resource.deleted':
+            handle_resource_deleted(integration_id, payload['data']['id'])
+
+        elif event_type == 'auth.revoked':
+            handle_auth_revoked(integration_id)
+
+        else:
+            logger.warning(f"Unknown webhook event type: {event_type}")
+
+        # Record successful processing
+        log_webhook_processed(integration_id, event_type, received_at)
+
+    except Exception as e:
+        logger.error(f"Webhook processing failed: {e}")
+
+        # Retry with exponential backoff
+        if self.request.retries < self.max_retries:
+            raise self.retry(exc=e)
+
+        # Final failure - alert and log to DLQ
+        alert_webhook_failure(partner, integration_id, payload, e)
+```
+
+**3. Idempotency Handling**
+
+Webhooks may be delivered multiple times. Handle this with idempotency:
+
+```python
+def handle_resource_updated(integration_id, resource_data):
+    """Handle resource update webhook with idempotency"""
+
+    resource_id = resource_data['id']
+    webhook_id = resource_data.get('webhook_id') or resource_data.get('event_id')
+
+    # Check if already processed
+    if webhook_already_processed(webhook_id):
+        logger.info(f"Webhook {webhook_id} already processed, skipping")
+        return
+
+    # Get current version from database
+    resource = Resource.query.filter_by(
+        integration_id=integration_id,
+        external_id=resource_id
+    ).first()
+
+    # Only update if webhook data is newer
+    webhook_timestamp = parse_datetime(resource_data['updated_at'])
+
+    if resource and resource.last_synced_at >= webhook_timestamp:
+        logger.info(f"Resource {resource_id} already has newer data")
+        mark_webhook_processed(webhook_id)
+        return
+
+    # Update resource
+    if resource:
+        resource.update_from_dict(resource_data)
+        resource.last_synced_at = webhook_timestamp
+    else:
+        resource = Resource.create_from_dict(resource_data)
+
+    # Mark webhook as processed
+    mark_webhook_processed(webhook_id)
+
+    logger.info(f"Resource {resource_id} updated from webhook")
+
+
+# Idempotency tracking
+def webhook_already_processed(webhook_id):
+    """Check if webhook was already processed"""
+    return redis.exists(f"webhook_processed:{webhook_id}")
+
+def mark_webhook_processed(webhook_id):
+    """Mark webhook as processed (24 hour expiry)"""
+    redis.setex(f"webhook_processed:{webhook_id}", 86400, '1')
+```
+
+**4. Webhook Registration**
+
+```python
+def register_webhook(integration_id, webhook_url):
+    """Register webhook URL with partner"""
+
+    integration = get_integration(integration_id)
+    driver = get_driver(integration)
+
+    # Generate webhook secret
+    webhook_secret = secrets.token_urlsafe(32)
+
+    # Register with partner
+    response = driver.api.post('/webhooks', json={
+        'url': webhook_url,
+        'events': [
+            'resource.created',
+            'resource.updated',
+            'resource.deleted',
+            'auth.revoked',
+        ],
+        'secret': webhook_secret,
+    })
+
+    # Save webhook config
+    integration.update(
+        webhook_url=webhook_url,
+        webhook_secret=webhook_secret,
+        webhook_id=response['id'],
+    )
+
+    logger.info(f"Webhook registered for integration {integration_id}")
+```
+
+### Webhook Best Practices
+
+**1. Return 2xx Quickly**
+- Accept webhook within 5 seconds
+- Do all processing asynchronously
+- Partners will retry if you timeout
+
+**2. Validate Signatures**
+- Always validate webhook signatures
+- Use constant-time comparison (`hmac.compare_digest`)
+- Reject invalid signatures immediately
+
+**3. Handle Duplicates**
+- Webhooks can be delivered multiple times
+- Use idempotency keys
+- Check timestamps before updating
+
+**4. Monitor Webhook Health**
+```python
+# Track webhook metrics
+webhook_received = Counter('webhooks_received', ['partner', 'event_type'])
+webhook_processing_duration = Histogram('webhook_processing_seconds', ['partner'])
+webhook_failures = Counter('webhook_failures', ['partner', 'error_type'])
+
+# Alert on webhook failures
+if webhook_failure_rate(partner) > 0.05:  # 5%
+    alert_oncall(f"High webhook failure rate for {partner}")
+```
+
+**5. Retry Failed Webhooks**
+```python
+@celery_task
+def replay_failed_webhooks(integration_id, since):
+    """Manually replay failed webhooks from DLQ"""
+
+    failed = WebhookFailure.query.filter(
+        WebhookFailure.integration_id == integration_id,
+        WebhookFailure.failed_at >= since,
+        WebhookFailure.status == 'failed'
+    ).all()
+
+    for failure in failed:
+        process_webhook.delay(
+            partner=failure.partner,
+            integration_id=integration_id,
+            payload=failure.payload,
+            received_at=failure.received_at
+        )
+        failure.status = 'retrying'
+
+    db.session.commit()
+```
+
+---
+
+## Architecture Decision Trees
+
+Choosing the right patterns depends on your scale. Here are decision trees to guide you:
+
+### Rate Limiting Strategy
+
+```mermaid
+graph TD
+    A[How many integrations?] --> B{< 5}
+    A --> C{5-20}
+    A --> D{20-50}
+    A --> E{50+}
+
+    B --> B1[Simple time.sleep<br/>between requests]
+    C --> C1[Celery rate_limit<br/>parameter]
+    D --> D1[Separate queue per partner<br/>+ concurrency control]
+    E --> E1[Distributed rate limiter Redis<br/>+ circuit breakers + autoscaling]
+
+    style B1 fill:#90EE90
+    style C1 fill:#FFD700
+    style D1 fill:#FFA500
+    style E1 fill:#FF6347
+```
+
+### Queue Management Strategy
+
+```mermaid
+graph TD
+    A[Expected throughput?] --> B{< 100 tasks/hour}
+    A --> C{100-1000 tasks/hour}
+    A --> D{1000-10000 tasks/hour}
+    A --> E{10000+ tasks/hour}
+
+    B --> B1[Single queue<br/>1-2 workers]
+    C --> C1[Priority queues<br/>high/normal/low]
+    D --> D1[Queue per partner<br/>+ worker pools<br/>+ autoscaling]
+    E --> E1[Sharded queues<br/>+ load balancer<br/>+ horizontal scaling]
+
+    B1 --> B2[Simple & cheap]
+    C1 --> C2[Good balance]
+    D1 --> D2[Production ready]
+    E1 --> E2[Enterprise scale]
+
+    style B1 fill:#90EE90
+    style C1 fill:#FFD700
+    style D1 fill:#FFA500
+    style E1 fill:#FF6347
+```
+
+### Error Handling Strategy
+
+```mermaid
+graph TD
+    A[Error occurred] --> B{Error type?}
+
+    B --> C[Transient<br/>500, 502, 503, timeout]
+    B --> D[Rate Limit<br/>429]
+    B --> E[Client Error<br/>400, 404]
+    B --> F[Auth Error<br/>401]
+    B --> G[Data Error<br/>Invalid response]
+
+    C --> C1[Retry with<br/>exponential backoff]
+    C1 --> C2{Max retries<br/>reached?}
+    C2 -->|No| C3[Retry]
+    C2 -->|Yes| C4[Send to DLQ<br/>+ Alert]
+
+    D --> D1[Wait for<br/>Retry-After header]
+    D1 --> D2[Retry after delay]
+
+    E --> E1[Log error]
+    E1 --> E2[Skip this item]
+    E2 --> E3[Continue with next]
+
+    F --> F1{Can refresh<br/>token?}
+    F1 -->|Yes| F2[Refresh OAuth token]
+    F2 --> F3[Retry request]
+    F1 -->|No| F4[Alert: Auth broken]
+
+    G --> G1[Log for investigation]
+    G1 --> G2[Skip this item]
+    G2 --> G3[Continue with next]
+
+    style C4 fill:#FF6347
+    style F4 fill:#FF6347
+    style E2 fill:#FFD700
+    style G2 fill:#FFD700
+```
+
+### Sync Strategy Selection
+
+```mermaid
+graph TD
+    A[Choose sync strategy] --> B{Partner supports<br/>webhooks?}
+
+    B -->|Yes| C[Webhooks for<br/>real-time updates]
+    B -->|No| D{Data changes<br/>frequently?}
+
+    D -->|Yes| E{Can filter by<br/>updated_since?}
+    D -->|No| F[Full sync<br/>every 24 hours]
+
+    E -->|Yes| G[Incremental sync<br/>every 15-60 min]
+    E -->|No| H[Full sync<br/>every 4-6 hours]
+
+    C --> I[+ Incremental sync<br/>as backup 1x/day]
+
+    G --> J{Scale?}
+    J -->|< 1000 items| K[Simple polling]
+    J -->|1000-10000| L[Cursor pagination]
+    J -->|10000+| M[Batch processing<br/>+ chunking]
+
+    style C fill:#90EE90
+    style G fill:#90EE90
+    style F fill:#FFA500
+    style H fill:#FFD700
+```
+
+### When to Use What: Data Storage
+
+```mermaid
+graph TD
+    A[Where to store data?] --> B{Data type?}
+
+    B --> C[Cached API responses]
+    B --> D[Task state/results]
+    B --> E[Auth tokens]
+    B --> F[Core business data]
+
+    C --> C1[Redis<br/>TTL: 5-60 min]
+    D --> D1[Redis<br/>Celery result backend]
+    E --> E1[Database encrypted<br/>+ Redis cache 1 hour]
+    F --> F1[Database primary<br/>+ Redis cache if needed]
+
+    C1 --> G{Volume?}
+    G -->|Low| G1[Simple key-value]
+    G -->|High| G2[Hash with compression]
+
+    F1 --> H{Query patterns?}
+    H --> H1[Simple lookups:<br/>Postgres + indexes]
+    H --> H2[Complex analytics:<br/>Postgres + materialized views]
+    H --> H3[Time series:<br/>TimescaleDB or InfluxDB]
+
+    style C1 fill:#90EE90
+    style D1 fill:#90EE90
+    style E1 fill:#FFD700
+    style F1 fill:#FFA500
 ```
 
 ---
@@ -1301,45 +1744,41 @@ You can't fix what you can't see. Comprehensive monitoring is non-negotiable.
 
 ### Metrics to Track
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌──────────────────────────────────────────────────────────────┐
-│                    Monitoring Dashboard                       │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  API Call Metrics (per partner):                            │
-│  • Total calls/min                    [████░░░░] 450/600    │
-│  • Success rate                       [█████████] 99.2%     │
-│  • Average response time              [███░░░░░░] 250ms     │
-│  • P95 response time                  [█████░░░░] 800ms     │
-│  • P99 response time                  [███████░░] 1.2s      │
-│                                                              │
-│  Error Breakdown:                                           │
-│  • 4xx errors                         12/hour               │
-│    └─ 401 Unauthorized                8                     │
-│    └─ 404 Not Found                   4                     │
-│  • 5xx errors                         3/hour                │
-│  • Timeouts                           1/hour                │
-│  • Rate limits (429)                  0/hour  ✓             │
-│                                                              │
-│  Queue Metrics:                                             │
-│  • properties queue                   [██░░░░░░░] 234       │
-│  • reservations queue                 [█░░░░░░░░] 45        │
-│  • photos queue                       [████░░░░░] 890       │
-│  • Age of oldest task                 2m 34s                │
-│                                                              │
-│  Task Metrics:                                              │
-│  • Tasks succeeded                    1,234/hour            │
-│  • Tasks failed                       12/hour               │
-│  • Tasks retried                      45/hour               │
-│  • Average task duration              [███░░░░░░] 8.3s      │
-│                                                              │
-│  Integration Health:                                        │
-│  • Guesty          ✓ Healthy        Last run: 2m ago       │
-│  • Airbnb          ⚠ Degraded       Rate limited            │
-│  • Booking.com     ✗ Down           Auth failure            │
-│  • CloudBeds       ✓ Healthy        Last run: 5m ago       │
-└──────────────────────────────────────────────────────────────┘</pre>
-</div>
+**API Call Metrics (per partner):**
+- Total calls/min: `450/600` (75% utilization)
+- Success rate: `99.2%`
+- Average response time: `250ms`
+- P95 response time: `800ms`
+- P99 response time: `1.2s`
+
+**Error Breakdown:**
+- 4xx errors: `12/hour`
+  - 401 Unauthorized: `8`
+  - 404 Not Found: `4`
+- 5xx errors: `3/hour`
+- Timeouts: `1/hour`
+- Rate limits (429): `0/hour` ✓
+
+**Queue Metrics:**
+- resources queue: `234 tasks` (23% capacity)
+- transactions queue: `45 tasks` (5% capacity)
+- media queue: `890 tasks` (45% capacity)
+- Age of oldest task: `2m 34s`
+
+**Task Metrics:**
+- Tasks succeeded: `1,234/hour`
+- Tasks failed: `12/hour`
+- Tasks retried: `45/hour`
+- Average task duration: `8.3s`
+
+**Integration Health:**
+
+| Partner | Status | Details |
+|---------|--------|---------|
+| Guesty | ✓ Healthy | Last run: 2m ago |
+| Airbnb | ⚠ Degraded | Rate limited |
+| Booking.com | ✗ Down | Auth failure |
+| CloudBeds | ✓ Healthy | Last run: 5m ago |
 
 
 
@@ -1463,25 +1902,24 @@ Some operations trigger chains of API calls. This is where things get interestin
 
 ### The Problem
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">Import Properties Request
-    │
-    ├─> Fetch property list (1 API call)
-    │
-    ├─> For each property (100 properties):
-    │   ├─> Fetch property details (100 API calls)
-    │   ├─> Fetch property photos (100 API calls)
-    │   └─> Fetch reservations (100 API calls)
-    │
-    └─> Total: 301 API calls for one import!
+```mermaid
+graph TD
+    Import["Import Resources Request"]
 
-With 50 integrations running every hour:
-• 15,050 API calls/hour
-• 250 API calls/minute
-• 4+ API calls/second
+    Import --> FetchList["Fetch resource list<br/>(1 API call)"]
 
-Each partner has different rate limits!</pre>
-</div>
+    FetchList --> Loop["For each resource<br/>(100 resources)"]
+
+    Loop --> Details["Fetch resource details<br/>(100 API calls)"]
+    Loop --> Photos["Fetch resource media<br/>(100 API calls)"]
+    Loop --> Reservations["Fetch transactions<br/>(100 API calls)"]
+
+    Details --> Total["Total: 301 API calls<br/>for one import!"]
+    Photos --> Total
+    Reservations --> Total
+
+    Total --> Scale["With 50 integrations<br/>running every hour:<br/>• 15,050 API calls/hour<br/>• 250 API calls/minute<br/>• 4+ API calls/second<br/><br/>⚠️ Each partner has different rate limits!"]
+```
 
 
 
@@ -1493,12 +1931,12 @@ Fetch multiple items in one request:
 
 ```python
 # BAD: N+1 queries
-for property_id in property_ids:
-    details = api.get(f'/properties/{property_id}')  # 100 API calls
+for resource_id in resource_ids:
+    details = api.get(f'/resources/{resource_id}')  # 100 API calls
 
 # GOOD: Batch fetch
-property_ids_str = ','.join(property_ids)
-details = api.get(f'/properties?ids={property_ids_str}')  # 1 API call
+resource_ids_str = ','.join(resource_ids)
+details = api.get(f'/resources?ids={resource_ids_str}')  # 1 API call
 ```
 
 ### Strategy 2: Parallel with Concurrency Control
@@ -1506,30 +1944,30 @@ details = api.get(f'/properties?ids={property_ids_str}')  # 1 API call
 ```python
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-def fetch_property_details(property_id):
-    return api.get(f'/properties/{property_id}')
+def fetch_resource_details(resource_id):
+    return api.get(f'/resources/{resource_id}')
 
-property_ids = [...]  # 100 IDs
+resource_ids = [...]  # 100 IDs
 
 # Limit concurrency to respect rate limits
 MAX_CONCURRENT = 5
 
 with ThreadPoolExecutor(max_workers=MAX_CONCURRENT) as executor:
     futures = {
-        executor.submit(fetch_property_details, pid): pid
-        for pid in property_ids
+        executor.submit(fetch_resource_details, rid): rid
+        for rid in resource_ids  # Fixed variable name
     }
 
     results = []
     for future in as_completed(futures):
-        property_id = futures[future]
+        resource_id = futures[future]  # Fixed variable name
         try:
             result = future.result()
             results.append(result)
         except Exception as e:
-            logger.error(f"Failed to fetch property {property_id}: {e}")
+            logger.error(f"Failed to fetch resource {resource_id}: {e}")
 
-# Result: 100 properties fetched in ~20 API calls (5 at a time)
+# Result: 100 resources fetched in ~20 API calls (5 at a time)
 # Instead of 100 sequential calls taking 100s, takes ~20s
 ```
 
@@ -1599,38 +2037,31 @@ def import_properties(integration_id):
 
 ## Memory Management & Batching
 
-One of the sneakiest failure modes: your integration works perfectly for 10 properties, then crashes with OOM (Out Of Memory) when processing 10,000.
+One of the sneakiest failure modes: your integration works perfectly for 10 resources, then crashes with OOM (Out Of Memory) when processing 10,000.
 
 ### The Memory Bloat Problem
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">Scenario: Import 5,000 properties for a large customer
+**Scenario: Import 5,000 resources for a large customer**
 
-┌────────────────────────────────────────────────────────────┐
-│                    Memory Usage Timeline                    │
-├────────────────────────────────────────────────────────────┤
-│                                                             │
-│  8GB │                                             ┌─CRASH │
-│      │                                        ┌────┘        │
-│  6GB │                                   ┌────┘             │
-│      │                              ┌────┘                  │
-│  4GB │                         ┌────┘                       │
-│      │                    ┌────┘                            │
-│  2GB │               ┌────┘                                 │
-│      │          ┌────┘                                      │
-│  0GB └──────────┘──────────────────────────────────────────┤
-│      0        1000      2000      3000      4000      5000  │
-│                    Properties Processed                     │
-│                                                             │
-│  Problem: Loading all data into memory at once             │
-│  • Each property: ~50KB                                    │
-│  • 5,000 properties: 250MB base data                       │
-│  • Python object overhead: ~3x                             │
-│  • List/dict allocations: ~2x                              │
-│  • Total: ~1.5GB just for raw data                         │
-│  • Peak with processing: 3-8GB!                            │
-└────────────────────────────────────────────────────────────┘</pre>
-</div>
+```mermaid
+%%{init: {'theme':'base'}}%%
+xychart-beta
+    title "Memory Usage Timeline"
+    x-axis "Resources Processed" [0, 1000, 2000, 3000, 4000, 5000]
+    y-axis "Memory (GB)" 0 --> 8
+    line [0, 2, 4, 6, 7.5, 8]
+```
+
+**Problem: Loading all data into memory at once**
+
+| Factor | Impact |
+|--------|--------|
+| Each resource | ~50KB |
+| 5,000 resources | 250MB base data |
+| Python object overhead | ~3x multiplier |
+| List/dict allocations | ~2x multiplier |
+| **Total raw data** | **~1.5GB** |
+| **Peak with processing** | **3-8GB! ⚠️ CRASH** |
 
 
 
@@ -2095,27 +2526,21 @@ def import_all_properties_chunked(self, integration_id):
 
 ### Memory Management Checklist
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">┌────────────────────────────────────────────────────────────┐
-│           Memory Optimization Checklist                     │
-├────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ✓ Use generators/streaming instead of loading all data    │
-│  ✓ Process data in chunks (100-1000 items)                 │
-│  ✓ Use bulk operations for database writes                 │
-│  ✓ Close database sessions after each batch                │
-│  ✓ Delete large objects after use (del variable)           │
-│  ✓ Force garbage collection in long-running tasks          │
-│  ✓ Avoid circular references (use weakref)                 │
-│  ✓ Profile memory usage in development                     │
-│  ✓ Set memory limits per task                              │
-│  ✓ Monitor memory in production                            │
-│  ✓ Clear caches periodically                               │
-│  ✓ Use LRU cache with size limits                          │
-│  ✓ Avoid global state accumulation                         │
-│                                                             │
-└────────────────────────────────────────────────────────────┘</pre>
-</div>
+**Memory Optimization Checklist:**
+
+- ✓ Use generators/streaming instead of loading all data
+- ✓ Process data in chunks (100-1000 items)
+- ✓ Use bulk operations for database writes
+- ✓ Close database sessions after each batch
+- ✓ Delete large objects after use (`del variable`)
+- ✓ Force garbage collection in long-running tasks
+- ✓ Avoid circular references (use `weakref`)
+- ✓ Profile memory usage in development
+- ✓ Set memory limits per task
+- ✓ Monitor memory in production
+- ✓ Clear caches periodically
+- ✓ Use LRU cache with size limits
+- ✓ Avoid global state accumulation
 
 
 
@@ -2131,26 +2556,30 @@ Integration data is inherently eventually consistent. Embrace it.
 
 ### Challenge: Concurrent Updates
 
-<div style="background: #fff !important; background-color: #fff !important; padding: 20px !important; border-radius: 8px; overflow-x: auto; margin: 20px 0; border: 2px solid #999 !important; color-scheme: light !important;">
-<pre style="margin: 0 !important; color: #000 !important; background: #fff !important; background-color: #fff !important; font-family: 'Courier New', Courier, monospace !important; font-size: 14px !important; line-height: 1.5 !important; white-space: pre; overflow-x: auto; filter: none !important; -webkit-filter: none !important; color-scheme: light !important;">Scenario: Two workers processing same property
+**Scenario: Two workers processing same resource**
 
-Worker A                          Worker B
-   │                                 │
-   ├─ Fetch property @ 10:00:00     │
-   │  name: "Beach House"           │
-   │                                 ├─ Fetch property @ 10:00:01
-   │                                 │  name: "Beach House"
-   │                                 │
-   ├─ Update name to "Ocean Villa"  │
-   │  (from API)                     │
-   │  Save @ 10:00:05                │
-   │                                 │
-   │                                 ├─ Update name to "Beach House"
-   │                                 │  (from stale cached data)
-   │                                 │  Save @ 10:00:06
-   │                                 │
-   └─ RESULT: Old data wins! ✗     ─┘</pre>
-</div>
+```mermaid
+sequenceDiagram
+    participant WA as Worker A
+    participant DB as Database
+    participant WB as Worker B
+
+    WA->>DB: Fetch resource @ 10:00:00
+    Note right of WA: title: "Original Title"
+
+    WB->>DB: Fetch resource @ 10:00:01
+    Note right of WB: title: "Original Title"
+
+    Note over WA: Process API data
+    WA->>DB: Update title to "Updated Title"<br/>Save @ 10:00:05
+    Note right of WA: From API (fresh data)
+
+    Note over WB: Process stale data
+    WB->>DB: Update title to "Original Title"<br/>Save @ 10:00:06
+    Note right of WB: From stale cached data
+
+    Note over DB: ✗ RESULT: Old data wins!
+```
 
 
 
@@ -2159,11 +2588,11 @@ Worker A                          Worker B
 ### Solution 1: Last-Write-Wins with Timestamps
 
 ```python
-def update_property(property_id, new_data, fetched_at):
-    property = Property.find(property_id)
+def update_resource(resource_id, new_data, fetched_at):
+    resource = Resource.find(resource_id)
 
     # Only update if data is newer
-    if fetched_at > property.last_synced_at:
+    if fetched_at > resource.last_synced_at:
         property.update(
             name=new_data['name'],
             address=new_data['address'],
